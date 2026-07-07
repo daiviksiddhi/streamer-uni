@@ -723,7 +723,13 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
 
     if (topLive) {
       didAutoFeature.current = true;
-      setActiveLogin(topLive.login);
+      const timer = window.setTimeout(() => {
+        setActiveLogin(topLive.login);
+      }, 0);
+
+      return () => {
+        window.clearTimeout(timer);
+      };
     }
   }, [mergedChannels, initialLogin]);
 
@@ -815,7 +821,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         <button className="hidden h-8 w-8 items-center justify-center rounded-[4px] hover:bg-[#2f2f35] md:flex" aria-label="More">
           <KebabIcon />
         </button>
-        <label className="mx-auto flex h-9 w-full max-w-[400px] overflow-hidden rounded-[6px] border border-[#67676b] bg-[#18181b] focus-within:border-[#a970ff] focus-within:bg-[#0e0e10]">
+        <label className="mx-auto flex h-9 w-full max-w-[540px] overflow-hidden rounded-[6px] border border-[#67676b] bg-[#18181b] focus-within:border-[#a970ff] focus-within:bg-[#0e0e10]">
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -861,12 +867,12 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
       <div className="flex pt-[50px]">
         <aside
           className={`fixed bottom-0 left-0 top-[50px] z-30 border-r border-[#2f2f35] bg-[#1f1f23] transition-all duration-200 ${
-            sideOpen ? "w-[240px]" : "w-[58px]"
+            sideOpen ? "w-[286px]" : "w-[58px]"
           }`}
         >
           <div className="flex h-full flex-col overflow-hidden">
             <div className="flex h-12 items-center justify-between px-3">
-              {sideOpen && <h2 className="text-[15px] font-bold">For You</h2>}
+              {sideOpen && <h2 className="text-[17px] font-bold">For You</h2>}
               <button
                 className="grid h-8 w-8 place-items-center rounded-[4px] hover:bg-[#34343b]"
                 onClick={() => setSideOpen((current) => !current)}
@@ -876,7 +882,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
               </button>
             </div>
             {sideOpen && (
-              <div className="mx-2 mb-2 grid grid-cols-3 rounded-[4px] bg-[#111114] p-1 text-[12px] font-bold">
+              <div className="mx-2 mb-2 grid grid-cols-3 rounded-[4px] bg-[#111114] p-1 text-[14px] font-bold">
                 {(["All", "Faculty", "Students"] as const).map((item) => (
                   <button
                     key={item}
@@ -912,7 +918,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
           </div>
         </aside>
 
-        <section className={`min-w-0 flex-1 transition-[margin] duration-200 ${sideOpen ? "ml-[240px]" : "ml-[58px]"}`}>
+        <section className={`min-w-0 flex-1 transition-[margin] duration-200 ${sideOpen ? "ml-[286px]" : "ml-[58px]"}`}>
           {watchChannel ? (
             <WatchStage channel={watchChannel} parent={embedParent} onCategory={openCategory} />
           ) : (
@@ -1125,13 +1131,13 @@ function SidebarSection({
 
   return (
     <div className="mb-2">
-      {!collapsed && <p className="px-3 py-2 text-[13px] font-bold uppercase text-[#adadb8]">{title}</p>}
+      {!collapsed && <p className="px-3 py-2.5 text-[14px] font-bold uppercase text-[#adadb8]">{title}</p>}
       <div className="space-y-0.5">
         {visible.map((channel) => (
           <button
             key={channel.login}
             onClick={() => onSelect(channel.login)}
-            className={`flex h-[42px] w-full items-center gap-2.5 px-2.5 text-left hover:bg-[#26262c] ${
+            className={`flex h-[46px] w-full items-center gap-3 px-3 text-left hover:bg-[#26262c] ${
               activeLogin === channel.login ? "bg-[#2f2f35]" : ""
             }`}
           >
@@ -1139,16 +1145,16 @@ function SidebarSection({
             {!collapsed && (
               <>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] font-semibold leading-tight text-white">{channel.name}</span>
-                  <span className="block truncate text-[13px] leading-tight text-[#adadb8]">{channel.category}</span>
+                  <span className="block truncate text-[15px] font-semibold leading-tight text-white">{channel.name}</span>
+                  <span className="block truncate text-[14px] leading-tight text-[#adadb8]">{channel.category}</span>
                 </span>
                 {channel.live ? (
-                  <span className="flex shrink-0 items-center gap-1.5 text-[13px] text-[#dedee3]">
+                  <span className="flex shrink-0 items-center gap-1.5 text-[14px] text-[#dedee3]">
                     <span className="h-2 w-2 rounded-full bg-[#eb0400]" />
                     {formatViewers(channel.viewers)}
                   </span>
                 ) : (
-                  <span className="shrink-0 text-[13px] text-[#adadb8]">Offline</span>
+                  <span className="shrink-0 text-[14px] text-[#adadb8]">Offline</span>
                 )}
               </>
             )}
@@ -1158,7 +1164,7 @@ function SidebarSection({
       {!collapsed && sorted.length > limit && (
         <button
           onClick={() => setExpanded((current) => !current)}
-          className="px-3 py-1.5 text-[13px] font-semibold text-[#bf94ff] hover:underline"
+          className="px-3 py-2 text-[14px] font-semibold text-[#bf94ff] hover:underline"
         >
           {expanded ? "Show Less" : "Show More"}
         </button>
@@ -1169,7 +1175,7 @@ function SidebarSection({
 
 function Avatar({ channel, size }: { channel: Channel; size: "sm" | "md" | "lg" }) {
   const sizeClass = {
-    sm: "h-[30px] w-[30px] text-[11px]",
+    sm: "h-[34px] w-[34px] text-[12px]",
     md: "h-10 w-10 text-[13px]",
     lg: "h-[70px] w-[70px] text-[20px]"
   }[size];
@@ -1240,6 +1246,7 @@ function WatchStage({
               src={getWatchUrl(channel.login, parent)}
               title={`${channel.name} Twitch stream`}
               allowFullScreen
+              allow="autoplay; fullscreen; picture-in-picture"
               className="absolute inset-0 h-full w-full border-0"
             />
           ) : (
@@ -1347,7 +1354,7 @@ function WatchStage({
         </div>
       </div>
 
-      <aside className="flex h-[480px] w-full shrink-0 flex-col border-t border-[#2f2f35] bg-[#18181b] xl:sticky xl:top-[50px] xl:h-[calc(100vh-50px)] xl:w-[340px] xl:border-l xl:border-t-0">
+      <aside className="flex h-[480px] w-full shrink-0 flex-col border-t border-[#2f2f35] bg-[#18181b] xl:sticky xl:top-[50px] xl:h-[calc(100vh-50px)] xl:w-[376px] xl:border-l xl:border-t-0">
         {parent ? (
           <iframe
             src={getChatUrl(channel.login, parent)}
@@ -1554,25 +1561,25 @@ function SidebarCategories({
 
   return (
     <div className="mt-2">
-      <p className="px-3 py-2 text-[13px] font-bold uppercase text-[#adadb8]">Recommended Categories</p>
+      <p className="px-3 py-2.5 text-[14px] font-bold uppercase text-[#adadb8]">Recommended Categories</p>
       <div className="space-y-0.5">
         {categories.map((category) => (
           <button
             key={category.name}
             onClick={() => onSelect(category.name)}
-            className="flex h-[42px] w-full items-center gap-2.5 px-2.5 text-left hover:bg-[#26262c]"
+            className="flex h-[46px] w-full items-center gap-3 px-3 text-left hover:bg-[#26262c]"
           >
-            <span className="h-10 w-[30px] shrink-0 overflow-hidden rounded-[2px]">
+            <span className="h-[42px] w-[32px] shrink-0 overflow-hidden rounded-[2px]">
               <CategoryArt name={category.name} src={art[category.name]} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[14px] font-semibold leading-tight text-white">{category.name}</span>
-              <span className="block truncate text-[13px] leading-tight text-[#adadb8]">
+              <span className="block truncate text-[15px] font-semibold leading-tight text-white">{category.name}</span>
+              <span className="block truncate text-[14px] leading-tight text-[#adadb8]">
                 {category.liveCount} live channel{category.liveCount === 1 ? "" : "s"}
               </span>
             </span>
             {category.viewers > 0 && (
-              <span className="flex shrink-0 items-center gap-1.5 text-[13px] text-[#dedee3]">
+              <span className="flex shrink-0 items-center gap-1.5 text-[14px] text-[#dedee3]">
                 <span className="h-2 w-2 rounded-full bg-[#eb0400]" />
                 {formatViewers(category.viewers)}
               </span>

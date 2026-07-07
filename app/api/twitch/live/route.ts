@@ -48,6 +48,68 @@ type TwitchUsersResponse = {
   message?: string;
 };
 
+const successCacheHeaders = {
+  "Cache-Control": "public, max-age=0, s-maxage=30, stale-while-revalidate=120",
+  "Vercel-CDN-Cache-Control": "s-maxage=30, stale-while-revalidate=120"
+};
+
+const noStoreHeaders = {
+  "Cache-Control": "no-store"
+};
+
+let appTokenCache: {
+  accessToken: string;
+  expiresAt: number;
+} | null = null;
+
+function jsonResponse(payload: unknown, init?: ResponseInit) {
+  return NextResponse.json(payload, {
+    ...init,
+    headers: {
+      ...successCacheHeaders,
+      ...init?.headers
+    }
+  });
+}
+
+async function getAppAccessToken(clientId: string, clientSecret: string) {
+  const now = Date.now();
+
+  if (appTokenCache && appTokenCache.expiresAt > now + 60_000) {
+    return appTokenCache.accessToken;
+  }
+
+  const tokenResponse = await fetch("https://id.twitch.tv/oauth2/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: "client_credentials"
+    }),
+    cache: "no-store"
+  });
+
+  if (!tokenResponse.ok) {
+    throw new Error("Twitch token request failed.");
+  }
+
+  const tokenPayload = (await tokenResponse.json()) as TwitchTokenResponse;
+
+  if (!tokenPayload.access_token) {
+    throw new Error("Twitch token response did not include an access token.");
+  }
+
+  appTokenCache = {
+    accessToken: tokenPayload.access_token,
+    expiresAt: now + Math.max((tokenPayload.expires_in ?? 3600) - 60, 60) * 1000
+  };
+
+  return appTokenCache.accessToken;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const users = (searchParams.get("users") ?? "")
@@ -60,41 +122,18 @@ export async function GET(request: Request) {
   const clientSecret = process.env.TWITCH_CLIENT_SECRET;
 
   if (!users.length) {
-    return NextResponse.json({ configured: Boolean(clientId && clientSecret), streams: [], users: [] });
+    return jsonResponse({ configured: Boolean(clientId && clientSecret), streams: [], users: [] });
   }
 
   if (!clientId || !clientSecret) {
-    return NextResponse.json({ configured: false, streams: [], users: [] });
+    return NextResponse.json(
+      { configured: false, streams: [], users: [] },
+      { headers: noStoreHeaders }
+    );
   }
 
   try {
-    const tokenResponse = await fetch("https://id.twitch.tv/oauth2/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        grant_type: "client_credentials"
-      }),
-      cache: "no-store"
-    });
-
-    if (!tokenResponse.ok) {
-      return NextResponse.json(
-        { configured: true, streams: [], error: "Twitch token request failed." },
-        { status: 502 }
-      );
-    }
-
-    const tokenPayload = (await tokenResponse.json()) as TwitchTokenResponse;
-    if (!tokenPayload.access_token) {
-      return NextResponse.json(
-        { configured: true, streams: [], error: "Twitch token response did not include an access token." },
-        { status: 502 }
-      );
-    }
+    const accessToken = await getAppAccessToken(clientId, clientSecret);
 
     const streamParams = new URLSearchParams();
     users.forEach((user) => streamParams.append("user_login", user));
@@ -104,7 +143,7 @@ export async function GET(request: Request) {
     const [streamsResponse, usersResponse] = await Promise.all([
       fetch(`https://api.twitch.tv/helix/streams?${streamParams.toString()}`, {
         headers: {
-          Authorization: `Bearer ${tokenPayload.access_token}`,
+          Authorization: `Bearer ${accessToken}`,
           "Client-Id": clientId
         },
         next: {
@@ -113,7 +152,7 @@ export async function GET(request: Request) {
       }),
       fetch(`https://api.twitch.tv/helix/users?${userParams.toString()}`, {
         headers: {
-          Authorization: `Bearer ${tokenPayload.access_token}`,
+          Authorization: `Bearer ${accessToken}`,
           "Client-Id": clientId
         },
         next: {
@@ -125,7 +164,7 @@ export async function GET(request: Request) {
     if (!streamsResponse.ok || !usersResponse.ok) {
       return NextResponse.json(
         { configured: true, streams: [], users: [], error: "Twitch channel request failed." },
-        { status: 502 }
+        { status: 502, headers: noStoreHeaders }
       );
     }
 
@@ -145,7 +184,7 @@ export async function GET(request: Request) {
       gameIds.forEach((id) => gameParams.append("id", id));
       const gamesResponse = await fetch(`https://api.twitch.tv/helix/games?${gameParams.toString()}`, {
         headers: {
-          Authorization: `Bearer ${tokenPayload.access_token}`,
+          Authorization: `Bearer ${accessToken}`,
           "Client-Id": clientId
         },
         next: {
@@ -159,7 +198,7 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.json({
+    return jsonResponse({
       configured: true,
       streams: streamsPayload.data ?? [],
       users: usersPayload.data ?? [],
@@ -168,7 +207,7 @@ export async function GET(request: Request) {
   } catch {
     return NextResponse.json(
       { configured: true, streams: [], users: [], error: "Unable to reach Twitch right now." },
-      { status: 502 }
+      { status: 502, headers: noStoreHeaders }
     );
   }
 }
