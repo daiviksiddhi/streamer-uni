@@ -10,10 +10,21 @@ type TwitchStream = {
   id: string;
   user_login: string;
   user_name: string;
+  game_id: string;
   game_name: string;
   title: string;
   viewer_count: number;
   thumbnail_url: string;
+};
+
+type TwitchGame = {
+  id: string;
+  name: string;
+  box_art_url: string;
+};
+
+type TwitchGamesResponse = {
+  data?: TwitchGame[];
 };
 
 type TwitchUser = {
@@ -123,10 +134,36 @@ export async function GET(request: Request) {
       usersResponse.json() as Promise<TwitchUsersResponse>
     ]);
 
+    // Resolve box art for whatever categories are live right now
+    const gameIds = [
+      ...new Set((streamsPayload.data ?? []).map((stream) => stream.game_id).filter(Boolean))
+    ].slice(0, 100);
+    let games: TwitchGame[] = [];
+
+    if (gameIds.length) {
+      const gameParams = new URLSearchParams();
+      gameIds.forEach((id) => gameParams.append("id", id));
+      const gamesResponse = await fetch(`https://api.twitch.tv/helix/games?${gameParams.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${tokenPayload.access_token}`,
+          "Client-Id": clientId
+        },
+        next: {
+          revalidate: 3600
+        }
+      });
+
+      if (gamesResponse.ok) {
+        const gamesPayload = (await gamesResponse.json()) as TwitchGamesResponse;
+        games = gamesPayload.data ?? [];
+      }
+    }
+
     return NextResponse.json({
       configured: true,
       streams: streamsPayload.data ?? [],
-      users: usersPayload.data ?? []
+      users: usersPayload.data ?? [],
+      games
     });
   } catch {
     return NextResponse.json(
