@@ -586,8 +586,10 @@ const getInitials = (name: string) =>
     .map((part) => part[0]?.toUpperCase())
     .join("") || name.slice(0, 2).toUpperCase();
 
+// Browsers block autoplay with sound, so start muted — this lets the player
+// begin immediately without the manual play click; viewers can unmute in-player.
 const getWatchUrl = (login: string, parent: string) =>
-  `https://player.twitch.tv/?channel=${encodeURIComponent(login)}&parent=${encodeURIComponent(parent)}&autoplay=true`;
+  `https://player.twitch.tv/?channel=${encodeURIComponent(login)}&parent=${encodeURIComponent(parent)}&autoplay=true&muted=true`;
 
 const getChatUrl = (login: string, parent: string) =>
   `https://www.twitch.tv/embed/${encodeURIComponent(login)}/chat?parent=${encodeURIComponent(parent)}&darkpopout`;
@@ -1017,6 +1019,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
               channels={visibleChannels}
               activeLogin={activeLogin}
               onSelect={openChannel}
+              initialCount={12}
             />
 
             {offlineChannels.length > 0 && (
@@ -1026,15 +1029,73 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
                 channels={offlineChannels}
                 activeLogin={activeLogin}
                 onSelect={openChannel}
+                initialCount={8}
               />
             )}
             </>
             )}
           </div>
           )}
+          <Footer />
         </section>
       </div>
     </main>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="border-t border-[#2f2f35] px-4 py-6 sm:px-6">
+      <div className="mx-auto max-w-[1680px]">
+        <div className="flex items-center gap-2">
+          <img src="/su-crest-2026-transparent.png" alt="" className="h-6 w-6 object-contain" />
+          <span className="text-[13px] font-bold text-white">Streamer University Portal</span>
+          <span className="rounded-full bg-[#2f2f35] px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[#adadb8]">
+            Unofficial · Fan-made
+          </span>
+        </div>
+        <p className="mt-3 text-[12px] leading-relaxed text-[#adadb8]">
+          This is an unofficial, fan-made directory. It is not affiliated with, endorsed by, or
+          operated by Streamer University, Kai Cenat, Amazon, or Twitch. All streams, chat, avatars,
+          and category art are served directly from Twitch through their official public API and
+          embed players — this site is only a shortcut to find campus channels in one place.
+        </p>
+        <p className="mt-2 text-[12px] leading-relaxed text-[#adadb8]">
+          <span className="font-semibold text-[#dedee3]">Your privacy:</span> we do not run accounts,
+          collect personal information, set our own tracking cookies, or store any data about you.
+          Following, subscribing, and chatting all happen on Twitch under Twitch&apos;s own{" "}
+          <a
+            href="https://www.twitch.tv/p/legal/privacy-notice/"
+            target="_blank"
+            rel="noreferrer"
+            className="text-[#bf94ff] hover:underline"
+          >
+            Privacy Notice
+          </a>
+          . Anonymous, aggregate page-view counts are collected via Vercel Analytics to gauge
+          traffic; these contain no personally identifiable information.
+        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-[#adadb8]">
+          <a
+            href="https://dev.twitch.tv/docs/api/"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-white hover:underline"
+          >
+            Powered by the Twitch API
+          </a>
+          <a
+            href="https://shop.streameruniversity.com"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-white hover:underline"
+          >
+            Buy Merch
+          </a>
+          <span>© {new Date().getFullYear()} — a fan project</span>
+        </div>
+      </div>
+    </footer>
   );
 }
 
@@ -1306,14 +1367,20 @@ function ChannelShelf({
   accent,
   channels: shelfChannels,
   activeLogin,
-  onSelect
+  onSelect,
+  initialCount
 }: {
   title: string;
   accent: string;
   channels: Channel[];
   activeLogin: string;
   onSelect: (login: string) => void;
+  initialCount?: number;
 }) {
+  // Untruncated shelves must not freeze a count at mount time — channel lists
+  // start empty and fill in once the Twitch data loads.
+  const [visibleCount, setVisibleCount] = useState(initialCount ?? Number.POSITIVE_INFINITY);
+
   if (!shelfChannels.length) {
     return (
       <section className="mb-8 border-t border-[#2f2f35] pt-6">
@@ -1331,7 +1398,7 @@ function ChannelShelf({
         <span className="text-[#bf94ff]">{title}</span> {accent}
       </h2>
       <div className="grid gap-x-3 gap-y-7 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        {shelfChannels.map((channel) => (
+        {shelfChannels.slice(0, visibleCount).map((channel) => (
           <button key={channel.login} onClick={() => onSelect(channel.login)} className="group min-w-0 text-left">
             <div className="relative">
               <div className="absolute inset-0 bg-[#9147ff]" aria-hidden="true" />
@@ -1380,14 +1447,31 @@ function ChannelShelf({
           </button>
         ))}
       </div>
-      <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-4 text-center">
-        <span className="h-px bg-[#2f2f35]" />
-        <button className="flex items-center gap-1 rounded-[4px] px-3 py-1.5 text-[13px] font-semibold text-[#bf94ff] hover:bg-[#26262c]">
-          Show more
-          <ChevronDownIcon className="h-4 w-4" />
-        </button>
-        <span className="h-px bg-[#2f2f35]" />
-      </div>
+      {initialCount !== undefined && shelfChannels.length > initialCount && (
+        <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-4 text-center">
+          <span className="h-px bg-[#2f2f35]" />
+          {visibleCount < shelfChannels.length ? (
+            <button
+              onClick={() =>
+                setVisibleCount((current) => Math.min(current + initialCount, shelfChannels.length))
+              }
+              className="flex items-center gap-1 rounded-[4px] px-3 py-1.5 text-[13px] font-semibold text-[#bf94ff] hover:bg-[#26262c]"
+            >
+              Show more
+              <ChevronDownIcon className="h-4 w-4" />
+            </button>
+          ) : (
+            <button
+              onClick={() => setVisibleCount(initialCount)}
+              className="flex items-center gap-1 rounded-[4px] px-3 py-1.5 text-[13px] font-semibold text-[#bf94ff] hover:bg-[#26262c]"
+            >
+              Show less
+              <ChevronDownIcon className="h-4 w-4 rotate-180" />
+            </button>
+          )}
+          <span className="h-px bg-[#2f2f35]" />
+        </div>
+      )}
     </section>
   );
 }
