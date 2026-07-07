@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Streamer University Loading Scenes",
-  description: "Premium Streamer University admissions loading screen concepts.",
+  title: "Streamer University Live",
+  description: "A campus live directory for Streamer University staff and students.",
   openGraph: {
-    title: "Streamer University Loading Scenes",
-    description: "Premium Streamer University admissions loading screen concepts.",
+    title: "Streamer University Live",
+    description: "A campus live directory for Streamer University staff and students.",
     type: "website"
   }
 };

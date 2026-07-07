@@ -3,8 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --font-display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
-  --font-sans: "Satoshi", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: Inter, Roobert, Helvetica Neue, Helvetica, Arial, sans-serif;
 }
 
 * {
@@ -12,22 +11,16 @@
 }
 
 html {
-  scroll-behavior: smooth;
-  background: #ffffff;
+  background: #0e0e10;
 }
 
 body {
   min-height: 100vh;
   margin: 0;
   overflow-x: hidden;
-  color: #171413;
-  background: #ffffff;
+  background: #0e0e10;
+  color: #efeff1;
   font-family: var(--font-sans);
-}
-
-::selection {
-  color: #fff9ef;
-  background: #6e1325;
 }
 
 button,
@@ -41,144 +34,45 @@ button {
   cursor: pointer;
 }
 
-.radar-grid {
-  background:
-    linear-gradient(rgba(240, 214, 153, 0.12) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(240, 214, 153, 0.12) 1px, transparent 1px),
-    linear-gradient(rgba(110, 19, 37, 0.22) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(110, 19, 37, 0.22) 1px, transparent 1px);
-  background-size: 56px 56px, 56px 56px, 14px 14px, 14px 14px;
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #bf94ff;
+  outline-offset: 2px;
 }
 
-.radar-hover-cell {
-  pointer-events: none;
-  width: 56px;
-  height: 56px;
-  border: 1px solid rgba(240, 214, 153, 0.3);
-  background: rgba(240, 214, 153, 0.1);
-  box-shadow:
-    inset 0 0 20px rgba(240, 214, 153, 0.14),
-    0 0 16px rgba(240, 214, 153, 0.1);
-  opacity: 0;
-  transform: scale(0.82);
-  will-change: opacity, transform;
-  animation: radar-cell-fade 820ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+::selection {
+  color: #ffffff;
+  background: #9147ff;
 }
 
-.radar-ring {
-  border-color: rgba(240, 214, 153, 0.28);
-  box-shadow:
-    inset 0 0 18px rgba(240, 214, 153, 0.05),
-    0 0 12px rgba(240, 214, 153, 0.08);
+img {
+  display: block;
 }
 
-.typing-line {
-  width: 0;
-  max-width: max-content;
+.search-glyph {
+  position: relative;
+  width: 17px;
+  height: 17px;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+}
+
+.search-glyph::after {
+  position: absolute;
+  right: -6px;
+  bottom: -5px;
+  width: 8px;
+  height: 2px;
+  content: "";
+  background: currentColor;
+  border-radius: 2px;
+  transform: rotate(45deg);
+  transform-origin: left center;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
   overflow: hidden;
-  white-space: nowrap;
-  border-right: 0.14em solid rgba(240, 214, 153, 0.88);
-  animation:
-    radar-type-loop 6.8s steps(26, end) 0.35s infinite,
-    radar-caret 780ms step-end infinite;
-}
-
-@keyframes radar-cell-fade {
-  0% {
-    opacity: 0;
-    transform: scale(0.82);
-  }
-
-  14% {
-    opacity: 0.95;
-    transform: scale(1);
-  }
-
-  68% {
-    opacity: 0.36;
-    transform: scale(0.98);
-  }
-
-  100% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-}
-
-@keyframes radar-type-loop {
-  0% {
-    width: 0;
-  }
-
-  38% {
-    width: 26ch;
-  }
-
-  62% {
-    width: 26ch;
-  }
-
-  100% {
-    width: 0;
-  }
-}
-
-@keyframes radar-caret {
-  50% {
-    border-color: transparent;
-  }
-}
-
-.radar-blip {
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.72);
-  animation-name: radar-blip-hit;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-}
-
-.radar-blip-ring {
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.62);
-  animation-name: radar-blip-ring;
-  animation-duration: inherit;
-  animation-delay: inherit;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-}
-
-@keyframes radar-blip-hit {
-  0% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.18);
-  }
-
-  8% {
-    opacity: 0.62;
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  22%,
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.82);
-  }
-}
-
-@keyframes radar-blip-ring {
-  0% {
-    opacity: 0.58;
-    transform: translate(-50%, -50%) scale(0.9);
-  }
-
-  18% {
-    opacity: 0.12;
-    transform: translate(-50%, -50%) scale(1.35);
-  }
-
-  30%,
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(1.55);
-  }
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
