@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
 type Channel = {
@@ -54,6 +54,19 @@ type TwitchUser = {
 type TwitchGame = {
   name?: string;
   box_art_url?: string;
+};
+
+type TwitchClip = {
+  id: string;
+  url: string;
+  broadcaster_login: string;
+  broadcaster_name: string;
+  game_name: string;
+  title: string;
+  view_count: number;
+  created_at: string;
+  thumbnail_url: string;
+  duration: number;
 };
 
 const facultySeeds: SeedChannel[] = [
@@ -534,9 +547,11 @@ const categoryBoxArt: Record<string, string> = {
   "Just Chatting": "https://static-cdn.jtvnw.net/ttv-boxart/509658-285x380.jpg",
   IRL: "https://static-cdn.jtvnw.net/ttv-boxart/509672-285x380.jpg",
   Music: "https://static-cdn.jtvnw.net/ttv-boxart/26936-285x380.jpg",
-  Sports: "https://static-cdn.jtvnw.net/ttv-boxart/518203-285x380.jpg",
-  Creative: "https://static-cdn.jtvnw.net/ttv-boxart/509660-285x380.jpg"
+  Creative: "https://static-cdn.jtvnw.net/ttv-boxart/509660-285x380.jpg",
+  Gaming: "/gaming-category-cover.png"
 };
+
+const excludedCategories = new Set(["Animals, Aquariums, and Zoos", "Sports", "Puzzles"]);
 
 const formatViewers = (value: number) => {
   if (value === 0) return "Offline";
@@ -545,6 +560,28 @@ const formatViewers = (value: number) => {
     return `${Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1)}K`;
   }
   return String(value);
+};
+
+const getSpotlightChannels = (directory: Channel[]) => {
+  const liveChannels = [...directory]
+    .filter((channel) => channel.live)
+    .sort((a, b) => b.viewers - a.viewers);
+  const selected: Channel[] = [];
+  const add = (channel?: Channel) => {
+    if (channel && !selected.some((current) => current.login === channel.login)) {
+      selected.push(channel);
+    }
+  };
+
+  add(liveChannels.find((channel) => channel.role === "Faculty"));
+  add(liveChannels.find((channel) => channel.role === "Student"));
+  add(liveChannels.find((channel) => !selected.some((current) => current.campusRole === channel.campusRole)));
+
+  // Give a currently live, mid-sized campus channel a place beside the biggest streams.
+  add(liveChannels.slice(Math.floor(liveChannels.length / 2)).find(Boolean));
+
+  liveChannels.forEach(add);
+  return selected.slice(0, 5);
 };
 
 const campusSections = [
@@ -606,6 +643,9 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [liveOverrides, setLiveOverrides] = useState<Record<string, Partial<Channel>>>({});
   const [gameArt, setGameArt] = useState<Record<string, string>>({});
+  const [isDirectoryLoading, setIsDirectoryLoading] = useState(true);
+  const [popularClips, setPopularClips] = useState<TwitchClip[]>([]);
+  const [featuredIndex, setFeaturedIndex] = useState(0);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -622,6 +662,30 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
       mobileQuery.removeEventListener("change", syncSidebar);
     };
   }, []);
+
+  useEffect(() => {
+    if (isDirectoryLoading) return;
+
+    let ignore = false;
+    const users = channels.map((channel) => channel.login);
+
+    fetch(`/api/twitch/clips?users=${encodeURIComponent(users.join(","))}`)
+      .then((response) =>
+        response.json() as Promise<{
+          clips?: TwitchClip[];
+        }>
+      )
+      .then((payload) => {
+        if (!ignore) setPopularClips(payload.clips ?? []);
+      })
+      .catch(() => {
+        if (!ignore) setPopularClips([]);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [isDirectoryLoading]);
 
   useEffect(() => {
     const userChunks = chunkItems(
@@ -693,6 +757,9 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
       })
       .catch(() => {
         setLiveOverrides({});
+      })
+      .finally(() => {
+        if (!ignore) setIsDirectoryLoading(false);
       });
 
     return () => {
@@ -712,26 +779,6 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
       }),
     [liveOverrides]
   );
-
-  // Once live data lands, feature the biggest live stream instead of an offline channel
-  const didAutoFeature = useRef(false);
-  useEffect(() => {
-    if (didAutoFeature.current || initialLogin) return;
-    const topLive = [...mergedChannels]
-      .filter((channel) => channel.live)
-      .sort((a, b) => b.viewers - a.viewers)[0];
-
-    if (topLive) {
-      didAutoFeature.current = true;
-      const timer = window.setTimeout(() => {
-        setActiveLogin(topLive.login);
-      }, 0);
-
-      return () => {
-        window.clearTimeout(timer);
-      };
-    }
-  }, [mergedChannels, initialLogin]);
 
   const openChannel = (login: string) => {
     setActiveLogin(login);
@@ -774,10 +821,6 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
   const visibleChannels = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return mergedChannels.filter((channel) => {
-      const roleMatch =
-        filter === "All" ||
-        (filter === "Faculty" && channel.role === "Faculty") ||
-        (filter === "Students" && channel.role === "Student");
       const queryMatch =
         !normalized ||
         channel.login.toLowerCase().includes(normalized) ||
@@ -785,22 +828,73 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         channel.campusRole.toLowerCase().includes(normalized) ||
         channel.category.toLowerCase().includes(normalized) ||
         channel.title.toLowerCase().includes(normalized);
-      return roleMatch && queryMatch;
+      return queryMatch;
     });
-  }, [filter, mergedChannels, query]);
+  }, [mergedChannels, query]);
+
+  const displayCategories = categoryStats.filter(
+    (category) => !excludedCategories.has(category.name)
+  );
 
   const activeChannel =
     mergedChannels.find((channel) => channel.login === activeLogin) ?? mergedChannels[0];
   const watchChannel =
     mergedChannels.find((channel) => channel.login === watchLogin) ?? null;
   const liveChannels = visibleChannels.filter((channel) => channel.live);
-  const offlineChannels = visibleChannels.filter((channel) => !channel.live);
+  const spotlightChannels = useMemo(() => getSpotlightChannels(mergedChannels), [mergedChannels]);
+  const currentSpotlightIndex =
+    spotlightChannels.length > 0 ? featuredIndex % spotlightChannels.length : 0;
+  const featuredChannel = spotlightChannels[currentSpotlightIndex] ?? activeChannel;
+  const previousSpotlight =
+    spotlightChannels.length > 1
+      ? spotlightChannels[
+          (currentSpotlightIndex - 1 + spotlightChannels.length) % spotlightChannels.length
+        ]
+      : null;
+  const nextSpotlight =
+    spotlightChannels.length > 1
+      ? spotlightChannels[(currentSpotlightIndex + 1) % spotlightChannels.length]
+      : null;
+
+  useEffect(() => {
+    if (initialLogin || spotlightChannels.length < 2) return;
+
+    const timer = window.setInterval(() => {
+      setFeaturedIndex((current) => (current + 1) % spotlightChannels.length);
+    }, 25_000);
+
+    return () => window.clearInterval(timer);
+  }, [initialLogin, spotlightChannels.length]);
+
+  const selectDirectoryFilter = (nextFilter: "All" | "Faculty" | "Students") => {
+    setFilter(nextFilter);
+    setCategoryFilter(null);
+    setWatchLogin(null);
+    router.push("/");
+
+    window.requestAnimationFrame(() => {
+      if (nextFilter === "All") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
+      document
+        .getElementById(nextFilter === "Faculty" ? "faculty-directory" : "student-directory")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
 
   const moveFeatured = (direction: number) => {
-    const currentIndex = mergedChannels.findIndex((channel) => channel.login === activeChannel.login);
-    const nextIndex = (currentIndex + direction + mergedChannels.length) % mergedChannels.length;
-    setActiveLogin(mergedChannels[nextIndex].login);
+    if (spotlightChannels.length < 2) return;
+    const nextIndex =
+      (currentSpotlightIndex + direction + spotlightChannels.length) % spotlightChannels.length;
+    setFeaturedIndex(nextIndex);
+    setActiveLogin(spotlightChannels[nextIndex].login);
   };
+
+  if (isDirectoryLoading) {
+    return <DirectoryLoading />;
+  }
 
   return (
     <main className="min-h-screen bg-[#0e0e10] text-[#efeff1]">
@@ -886,7 +980,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
                 {(["All", "Faculty", "Students"] as const).map((item) => (
                   <button
                     key={item}
-                    onClick={() => setFilter(item)}
+                    onClick={() => selectDirectoryFilter(item)}
                     className={`rounded-[3px] px-2 py-1.5 ${
                       filter === item ? "bg-[#9147ff] text-white" : "text-[#adadb8] hover:text-white"
                     }`}
@@ -909,7 +1003,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
               ))}
               {sideOpen && (
                 <SidebarCategories
-                  categories={categoryStats.filter((category) => category.liveCount > 0).slice(0, 6)}
+                  categories={displayCategories.filter((category) => category.liveCount > 0).slice(0, 6)}
                   art={gameArt}
                   onSelect={openCategory}
                 />
@@ -934,65 +1028,87 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
               />
             ) : (
             <>
-            <section className="relative mb-8 min-h-[292px] overflow-hidden">
+            <section className="relative mb-8 min-h-[292px] overflow-hidden xl:min-h-[390px]">
               <button
                 onClick={() => moveFeatured(-1)}
-                className="absolute left-0 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-[4px] hover:bg-[#2f2f35] lg:grid"
+                className="absolute left-0 top-1/2 z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-[4px] hover:bg-[#2f2f35] lg:grid"
                 aria-label="Previous featured channel"
               >
                 <ChevronLeftIcon className="h-6 w-6" />
               </button>
               <button
                 onClick={() => moveFeatured(1)}
-                className="absolute right-0 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-[4px] hover:bg-[#2f2f35] lg:grid"
+                className="absolute right-0 top-1/2 z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-[4px] hover:bg-[#2f2f35] lg:grid"
                 aria-label="Next featured channel"
               >
                 <ChevronRightIcon className="h-6 w-6" />
               </button>
-              <div className="mx-auto grid max-w-[980px] grid-cols-1 bg-[#18181b] shadow-[0_12px_35px_rgba(0,0,0,0.45)] lg:grid-cols-[minmax(0,1fr)_292px]">
-                <button
-                  onClick={() => openChannel(activeChannel.login)}
-                  className="group relative aspect-video min-h-[220px] overflow-hidden bg-black text-left"
-                >
-                  <StreamThumbnail channel={activeChannel} className="transition duration-300 group-hover:scale-[1.02]" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/25" />
-                  {activeChannel.live && <span className="absolute left-3 top-3 rounded-[3px] bg-[#eb0400] px-2 py-1 text-[13px] font-black">LIVE</span>}
-                  <div className="absolute bottom-3 left-3 rounded-[3px] bg-black/65 px-2 py-1 text-[15px] font-semibold">
-                    {activeChannel.live ? `${formatViewers(activeChannel.viewers)} viewers` : "Offline"}
-                  </div>
-                </button>
-                <div className="flex min-h-[220px] flex-col p-4">
-                  <div className="flex gap-3">
-                    <Avatar channel={activeChannel} size="lg" />
-                    <div className="min-w-0">
-                      <button className="truncate text-left text-[18px] font-bold text-[#bf94ff] hover:underline">
-                        {activeChannel.name}
-                      </button>
-                      <p className="truncate text-[15px] text-white">{activeChannel.category}</p>
-                      <p className="truncate text-[14px] text-[#adadb8]">{activeChannel.campusRole}</p>
-                      <p className="text-[14px] text-[#dedee3]">
-                        {activeChannel.live ? `${formatViewers(activeChannel.viewers)} viewers` : "Offline"}
-                      </p>
+              <div className="relative mx-auto max-w-[1260px] xl:h-[390px]">
+                {previousSpotlight && (
+                  <button
+                    onClick={() => moveFeatured(-1)}
+                    className="absolute left-0 top-1/2 z-0 hidden h-[278px] w-[360px] -translate-y-1/2 overflow-hidden bg-black text-left opacity-55 shadow-[0_8px_22px_rgba(0,0,0,0.5)] transition hover:opacity-80 xl:block"
+                    aria-label={`Show ${previousSpotlight.name}`}
+                  >
+                    <StreamThumbnail channel={previousSpotlight} className="h-full w-full object-cover" />
+                    <div className="absolute inset-0 bg-black/35" />
+                  </button>
+                )}
+                {nextSpotlight && (
+                  <button
+                    onClick={() => moveFeatured(1)}
+                    className="absolute right-0 top-1/2 z-0 hidden h-[278px] w-[360px] -translate-y-1/2 overflow-hidden bg-black text-left opacity-55 shadow-[0_8px_22px_rgba(0,0,0,0.5)] transition hover:opacity-80 xl:block"
+                    aria-label={`Show ${nextSpotlight.name}`}
+                  >
+                    <StreamThumbnail channel={nextSpotlight} className="h-full w-full object-cover" />
+                    <div className="absolute inset-0 bg-black/35" />
+                  </button>
+                )}
+                <div className="relative z-10 mx-auto grid max-w-[980px] grid-cols-1 bg-[#18181b] shadow-[0_12px_35px_rgba(0,0,0,0.45)] xl:w-[calc(100%-128px)] lg:grid-cols-[minmax(0,1fr)_292px]">
+                  <button
+                    onClick={() => openChannel(featuredChannel.login)}
+                    className="group relative aspect-video min-h-[220px] overflow-hidden bg-black text-left"
+                  >
+                    <StreamThumbnail channel={featuredChannel} className="transition duration-300 group-hover:scale-[1.02]" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/25" />
+                    {featuredChannel.live && <span className="absolute left-3 top-3 rounded-[3px] bg-[#eb0400] px-2 py-1 text-[13px] font-black">LIVE</span>}
+                    <div className="absolute bottom-3 left-3 rounded-[3px] bg-black/65 px-2 py-1 text-[15px] font-semibold">
+                      {featuredChannel.live ? `${formatViewers(featuredChannel.viewers)} viewers` : "Offline"}
                     </div>
-                  </div>
-                  <p className="mt-4 line-clamp-3 text-[14px] leading-snug text-[#efeff1]">{activeChannel.title}</p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {activeChannel.tags.map((tag) => (
-                      <span key={tag} className="rounded-full bg-[#2f2f35] px-2 py-1 text-[12px] font-bold text-[#dedee3]">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="mt-auto flex gap-2 pt-5">
-                    <button
-                      onClick={() => openChannel(activeChannel.login)}
-                      className="h-9 flex-1 rounded-[4px] bg-[#9147ff] px-3 text-[14px] font-bold text-white hover:bg-[#772ce8]"
-                    >
-                      Watch
-                    </button>
-                    <button className="h-9 rounded-[4px] bg-[#2f2f35] px-3 text-[14px] font-bold hover:bg-[#3b3b44]">
-                      Follow
-                    </button>
+                  </button>
+                  <div className="flex min-h-[220px] flex-col p-4">
+                    <div className="flex gap-3">
+                      <Avatar channel={featuredChannel} size="lg" />
+                      <div className="min-w-0">
+                        <button className="truncate text-left text-[18px] font-bold text-[#bf94ff] hover:underline">
+                          {featuredChannel.name}
+                        </button>
+                        <p className="truncate text-[15px] text-white">{featuredChannel.category}</p>
+                        <p className="truncate text-[14px] text-[#adadb8]">{featuredChannel.campusRole}</p>
+                        <p className="text-[14px] text-[#dedee3]">
+                          {featuredChannel.live ? `${formatViewers(featuredChannel.viewers)} viewers` : "Offline"}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="mt-4 line-clamp-3 text-[14px] leading-snug text-[#efeff1]">{featuredChannel.title}</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {featuredChannel.tags.map((tag) => (
+                        <span key={tag} className="rounded-full bg-[#2f2f35] px-2 py-1 text-[12px] font-bold text-[#dedee3]">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="mt-auto flex gap-2 pt-5">
+                      <button
+                        onClick={() => openChannel(featuredChannel.login)}
+                        className="h-9 flex-1 rounded-[4px] bg-[#9147ff] px-3 text-[14px] font-bold text-white hover:bg-[#772ce8]"
+                      >
+                        Watch
+                      </button>
+                      <button className="h-9 rounded-[4px] bg-[#2f2f35] px-3 text-[14px] font-bold hover:bg-[#3b3b44]">
+                        Follow
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1001,12 +1117,20 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
             <ChannelShelf
               title="Live channels"
               accent="we think you'll like"
-              channels={[...liveChannels].sort((a, b) => b.viewers - a.viewers).slice(0, 8)}
+              channels={[
+                ...(liveChannels.length > 1
+                  ? liveChannels.filter((channel) => channel.login !== featuredChannel.login)
+                  : liveChannels)
+              ]
+                .sort((a, b) => b.viewers - a.viewers)
+                .slice(0, 8)}
               activeLogin={activeLogin}
               onSelect={openChannel}
             />
 
-            <CategoryShelf categories={categoryStats} art={gameArt} onSelect={openCategory} />
+            <CatchUpShelf clips={popularClips} channels={mergedChannels} />
+
+            <CategoryShelf categories={displayCategories} art={gameArt} onSelect={openCategory} />
 
             <ChannelShelf
               title="Rising on campus"
@@ -1020,30 +1144,53 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
             />
 
             <ChannelShelf
+              id="faculty-directory"
               title="Streamer University"
-              accent="campus directory"
-              channels={visibleChannels}
+              accent="faculty"
+              channels={[...visibleChannels]
+                .filter((channel) => channel.role === "Faculty")
+                .sort((a, b) => Number(b.live) - Number(a.live) || b.viewers - a.viewers)}
               activeLogin={activeLogin}
               onSelect={openChannel}
               initialCount={12}
             />
 
-            {offlineChannels.length > 0 && (
-              <ChannelShelf
-                title="Offline"
-                accent="recent campus streams"
-                channels={offlineChannels}
-                activeLogin={activeLogin}
-                onSelect={openChannel}
-                initialCount={8}
-              />
-            )}
+            <ChannelShelf
+              id="student-directory"
+              title="Streamer University"
+              accent="students"
+              channels={[...visibleChannels]
+                .filter((channel) => channel.role === "Student")
+                .sort((a, b) => Number(b.live) - Number(a.live) || b.viewers - a.viewers)}
+              activeLogin={activeLogin}
+              onSelect={openChannel}
+              initialCount={12}
+            />
             </>
             )}
           </div>
           )}
           <Footer />
         </section>
+      </div>
+    </main>
+  );
+}
+
+function DirectoryLoading() {
+  return (
+    <main className="grid min-h-screen place-items-center bg-[#0e0e10] px-6 text-[#efeff1]">
+      <div className="flex flex-col items-center">
+        <img
+          src="/su-crest-2026-transparent.png"
+          alt="Streamer University"
+          className="h-16 w-16 object-contain"
+        />
+        <span
+          className="mt-5 h-7 w-7 animate-spin rounded-full border-[3px] border-[#3b3b44] border-t-[#9147ff]"
+          aria-hidden="true"
+        />
+        <p className="mt-4 text-[15px] font-semibold text-[#dedee3]">Loading campus streams</p>
       </div>
     </main>
   );
@@ -1370,6 +1517,7 @@ function WatchStage({
 }
 
 function ChannelShelf({
+  id,
   title,
   accent,
   channels: shelfChannels,
@@ -1377,6 +1525,7 @@ function ChannelShelf({
   onSelect,
   initialCount
 }: {
+  id?: string;
   title: string;
   accent: string;
   channels: Channel[];
@@ -1390,7 +1539,7 @@ function ChannelShelf({
 
   if (!shelfChannels.length) {
     return (
-      <section className="mb-8 border-t border-[#2f2f35] pt-6">
+      <section id={id} className="mb-8 scroll-mt-[70px] border-t border-[#2f2f35] pt-6">
         <h2 className="text-[20px] font-bold">
           <span className="text-[#bf94ff]">{title}</span> {accent}
         </h2>
@@ -1400,7 +1549,7 @@ function ChannelShelf({
   }
 
   return (
-    <section className="mb-8">
+    <section id={id} className="mb-8 scroll-mt-[70px]">
       <h2 className="mb-4 text-[20px] font-bold">
         <span className="text-[#bf94ff]">{title}</span> {accent}
       </h2>
@@ -1479,6 +1628,74 @@ function ChannelShelf({
           <span className="h-px bg-[#2f2f35]" />
         </div>
       )}
+    </section>
+  );
+}
+
+function formatClipAge(createdAt: string) {
+  const elapsedSeconds = Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 1000));
+  const hours = Math.floor(elapsedSeconds / 3600);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) return days === 1 ? "Yesterday" : `${days} days ago`;
+  if (hours > 0) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const minutes = Math.max(1, Math.floor(elapsedSeconds / 60));
+  return `${minutes} min ago`;
+}
+
+function CatchUpShelf({ clips, channels }: { clips: TwitchClip[]; channels: Channel[] }) {
+  if (!clips.length) return null;
+
+  const channelsByLogin = new Map(channels.map((channel) => [channel.login, channel]));
+
+  return (
+    <section className="mb-8">
+      <h2 className="mb-4 text-[20px] font-bold">
+        <span className="text-[#bf94ff]">Catch up</span> on popular streams
+      </h2>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {clips.slice(0, 4).map((clip) => {
+          const channel = channelsByLogin.get(clip.broadcaster_login.toLowerCase());
+          const name = channel?.name || clip.broadcaster_name;
+          const category = clip.game_name || channel?.category || "Streamer University";
+
+          return (
+            <article key={clip.id} className="min-w-0">
+              <a
+                href={clip.url}
+                target="_blank"
+                rel="noreferrer"
+                className="group relative block aspect-[9/13] overflow-hidden bg-[#18181b]"
+                aria-label={`Watch ${clip.title} from ${name}`}
+              >
+                <img
+                  src={clip.thumbnail_url}
+                  alt=""
+                  className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/60" />
+                <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-3 p-3">
+                  <span className="flex min-w-0 items-center gap-2 text-[14px] font-bold text-white">
+                    {channel ? <Avatar channel={channel} size="sm" /> : null}
+                    <span className="truncate">{name}</span>
+                  </span>
+                  <span className="shrink-0 rounded-[4px] bg-black/55 px-3 py-1.5 text-[13px] font-semibold text-white">
+                    Watch clip
+                  </span>
+                </div>
+                <span className="absolute bottom-3 left-3 rounded-[4px] bg-black/70 px-2 py-1 text-[13px] font-medium text-white">
+                  {formatClipAge(clip.created_at)}
+                </span>
+                <span className="absolute bottom-3 right-3 rounded-[4px] bg-black/70 px-2 py-1 text-[13px] font-medium text-white">
+                  {formatViewers(clip.view_count)} views
+                </span>
+              </a>
+              <p className="mt-2 truncate text-[15px] font-semibold text-white">{clip.title}</p>
+              <p className="mt-0.5 truncate text-[13px] text-[#adadb8]">{category}</p>
+            </article>
+          );
+        })}
+      </div>
     </section>
   );
 }
