@@ -958,12 +958,15 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         >
           Buy Merch
         </a>
-        <button
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#9147ff] text-white"
-          aria-label="Account"
+        <a
+          href="https://x.com/daiviksiddhi"
+          target="_blank"
+          rel="noreferrer"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#9147ff] text-white hover:bg-[#772ce8]"
+          aria-label="X profile"
         >
           <PersonIcon className="h-5 w-5" />
-        </button>
+        </a>
       </header>
 
       <div className="flex pt-[50px]">
