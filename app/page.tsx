@@ -641,6 +641,8 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
   const [sideOpen, setSideOpen] = useState(true);
   const [embedParent, setEmbedParent] = useState("");
   const [filter, setFilter] = useState<"All" | "Faculty" | "Students">("All");
+  const [isRosterFilterOpen, setIsRosterFilterOpen] = useState(false);
+  const [liveOnly, setLiveOnly] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [liveOverrides, setLiveOverrides] = useState<Record<string, Partial<Channel>>>({});
   const [gameArt, setGameArt] = useState<Record<string, string>>({});
@@ -833,6 +835,28 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
     });
   }, [mergedChannels, query]);
 
+  const sidebarChannels = useMemo(
+    () =>
+      mergedChannels.filter((channel) => {
+        const roleMatch =
+          filter === "All" ||
+          (filter === "Faculty" && channel.role === "Faculty") ||
+          (filter === "Students" && channel.role === "Student");
+        return roleMatch && (!liveOnly || channel.live);
+      }),
+    [filter, liveOnly, mergedChannels]
+  );
+
+  const sidebarSections = useMemo(() => {
+    const roleSections =
+      filter === "All"
+        ? campusSections
+        : filter === "Faculty"
+          ? campusSections.filter((section) => section !== "Student")
+          : ["Student"];
+    return roleSections.filter((section) => sidebarChannels.some((channel) => channel.campusRole === section));
+  }, [filter, sidebarChannels]);
+
   // Only surface categories someone on campus is actually streaming right now
   const displayCategories = categoryStats.filter(
     (category) => !excludedCategories.has(category.name) && category.liveCount > 0
@@ -875,6 +899,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
 
   const selectDirectoryFilter = (nextFilter: "All" | "Faculty" | "Students") => {
     setFilter(nextFilter);
+    setIsRosterFilterOpen(false);
     setCategoryFilter(null);
     setWatchLogin(null);
     router.push("/");
@@ -951,7 +976,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         </div>
         <Link
           href="/multiview"
-          className="hidden h-8 items-center gap-2 rounded-[4px] bg-[#9147ff] px-3.5 text-[13px] font-bold text-white shadow-[0_0_14px_rgba(145,71,255,0.35)] hover:bg-[#772ce8] lg:flex"
+          className="hidden h-8 items-center gap-2 rounded-[4px] bg-[#9147ff] px-3.5 text-[13px] font-bold text-white shadow-[0_0_14px_rgba(145,71,255,0.35)] hover:bg-[#772ce8] lg:ml-2 lg:flex"
         >
           <MultiviewIcon className="h-4 w-4" />
           Enter a Lecture Hall
@@ -993,32 +1018,61 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
               </button>
             </div>
             {sideOpen && (
-              <div className="mx-2 mb-2 grid grid-cols-3 rounded-[4px] bg-[#111114] p-1 text-[14px] font-bold">
-                {(["All", "Faculty", "Students"] as const).map((item) => (
+              <div className="relative mx-2 mb-2 flex gap-1.5 text-[14px] font-bold">
+                <div className="relative min-w-0 flex-1">
                   <button
-                    key={item}
-                    onClick={() => selectDirectoryFilter(item)}
-                    className={`rounded-[3px] px-2 py-1.5 ${
-                      filter === item ? "bg-[#9147ff] text-white" : "text-[#adadb8] hover:text-white"
+                    onClick={() => setIsRosterFilterOpen((current) => !current)}
+                    className={`flex h-9 w-full items-center justify-between rounded-[4px] bg-[#111114] px-3 transition hover:bg-[#18181b] ${
+                      isRosterFilterOpen ? "text-white" : "text-[#dedee3]"
                     }`}
+                    aria-label="Choose roster group"
+                    aria-expanded={isRosterFilterOpen}
                   >
-                    {item}
+                    <span>{filter}</span>
+                    <ChevronDownIcon className={`h-4 w-4 transition-transform ${isRosterFilterOpen ? "rotate-180" : ""}`} />
                   </button>
-                ))}
+                  {isRosterFilterOpen && (
+                    <div className="absolute inset-x-0 top-[calc(100%+4px)] z-20 overflow-hidden rounded-[4px] border border-[#34343b] bg-[#18181b] shadow-[0_8px_18px_rgba(0,0,0,0.45)]">
+                      {(["All", "Faculty", "Students"] as const).map((item) => (
+                        <button
+                          key={item}
+                          onClick={() => selectDirectoryFilter(item)}
+                          className={`flex h-9 w-full items-center px-3 text-left transition hover:bg-[#2f2f35] ${
+                            filter === item ? "bg-[#2f2f35] text-white" : "text-[#dedee3]"
+                          }`}
+                        >
+                          {item}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setLiveOnly((current) => !current)}
+                  className={`h-9 shrink-0 rounded-[4px] px-3 transition ${
+                    liveOnly ? "bg-[#9147ff] text-white" : "bg-[#111114] text-[#dedee3] hover:bg-[#18181b]"
+                  }`}
+                  aria-pressed={liveOnly}
+                >
+                  Live Now
+                </button>
               </div>
             )}
             <div className="min-h-0 flex-1 overflow-y-auto pb-2">
-              {campusSections.map((section) => (
+              {sidebarSections.map((section) => (
                 <SidebarSection
                   key={section}
                   collapsed={!sideOpen}
                   title={getSectionTitle(section)}
-                  channels={mergedChannels.filter((channel) => channel.campusRole === section)}
+                  channels={sidebarChannels.filter((channel) => channel.campusRole === section)}
                   activeLogin={activeLogin}
                   onSelect={openChannel}
                 />
               ))}
-              {sideOpen && (
+              {sideOpen && sidebarSections.length === 0 && (
+                <p className="px-3 py-6 text-center text-[13px] text-[#adadb8]">No campus channels are live right now.</p>
+              )}
+              {sideOpen && filter === "All" && !liveOnly && (
                 <SidebarCategories
                   categories={displayCategories.filter((category) => category.liveCount > 0).slice(0, 6)}
                   art={gameArt}
