@@ -9,10 +9,12 @@ const config: Config = {
     extend: {
       colors: {
         vellum: "#FFF9EF",
-        burgundy: "#6E1325",
-        wine: "#3D0A16",
-        gold: "#C99A3D",
-        "gold-soft": "#F0D699"
+        burgundy: "#B20B32",
+        wine: "#7D001B",
+        gold: "#FFC21A",
+        "gold-soft": "#FFE08A",
+        live: "#EB0400",
+        "live-soft": "#FF5A52"
       },
       fontFamily: {
         display: ["var(--font-display)", "Georgia", "serif"],

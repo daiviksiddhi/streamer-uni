@@ -81,7 +81,7 @@ const facultySeeds: SeedChannel[] = [
     live: true,
     verified: true,
     tags: ["Dean", "Streamer University"],
-    accent: "#9147ff"
+    accent: "#B20B32"
   },
   {
     login: "lizzobetwitchin",
@@ -164,7 +164,7 @@ const facultySeeds: SeedChannel[] = [
     viewers: 5400,
     live: true,
     tags: ["Professor", "Q&A"],
-    accent: "#c281ff"
+    accent: "#FFE08A"
   },
   {
     login: "maya",
@@ -247,7 +247,7 @@ const facultySeeds: SeedChannel[] = [
     live: true,
     verified: true,
     tags: ["Club Director", "Music"],
-    accent: "#a78bfa"
+    accent: "#FFC21A"
   },
   {
     login: "yonnajay",
@@ -315,7 +315,7 @@ const facultySeeds: SeedChannel[] = [
     live: true,
     verified: true,
     tags: ["Campus Police", "Just Chatting"],
-    accent: "#ef4444"
+    accent: "#FFE08A"
   },
   {
     login: "kelo",
@@ -509,7 +509,7 @@ const studentCategories = [
 ];
 
 const studentAccents = [
-  "#9147ff",
+  "#B20B32",
   "#00c8af",
   "#ff75e6",
   "#ffb000",
@@ -938,16 +938,16 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         >
           <img src="/su-crest-2026-transparent.png" alt="" className="h-8 w-8 object-contain" />
         </button>
-        <button onClick={browseHome} className="hidden h-full px-4 text-[15px] font-semibold text-white hover:text-[#bf94ff] sm:block">
+        <button onClick={browseHome} className="hidden h-full border-b-2 border-burgundy px-4 text-[15px] font-semibold text-white hover:text-gold sm:block">
           Following
         </button>
-        <button onClick={browseHome} className="hidden h-full px-4 text-[15px] font-semibold text-white hover:text-[#bf94ff] sm:block">
+        <button onClick={browseHome} className="hidden h-full px-4 text-[15px] font-semibold text-white hover:text-gold sm:block">
           Browse
         </button>
         <button className="hidden h-8 w-8 items-center justify-center rounded-[4px] hover:bg-[#2f2f35] md:flex" aria-label="More">
           <KebabIcon />
         </button>
-        <label className="mx-auto flex h-9 w-full max-w-[540px] overflow-hidden rounded-[6px] border border-[#67676b] bg-[#18181b] focus-within:border-[#a970ff] focus-within:bg-[#0e0e10]">
+        <label className="mx-auto flex h-9 w-full max-w-[540px] overflow-hidden rounded-[6px] border border-[#67676b] bg-[#18181b] focus-within:border-burgundy focus-within:bg-[#0e0e10]">
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -962,7 +962,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         <div className="hidden items-center gap-1.5 lg:flex">
           <button className="relative grid h-8 w-8 place-items-center rounded-[4px] hover:bg-[#2f2f35]" aria-label="Activity feed">
             <TrayIcon />
-            <span className="absolute -top-1 left-4 rounded-full bg-[#eb0400] px-1 text-[11px] font-bold leading-4 text-white">
+            <span className="absolute -top-1 left-4 rounded-full bg-burgundy px-1 text-[11px] font-bold leading-4 text-white">
               67
             </span>
           </button>
@@ -971,12 +971,12 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
           </button>
           <button className="relative grid h-8 w-8 place-items-center rounded-[4px] hover:bg-[#2f2f35]" aria-label="Notifications">
             <BellIcon />
-            <span className="absolute right-1 top-0.5 h-2 w-2 rounded-full bg-[#bf94ff]" />
+            <span className="absolute right-1 top-0.5 h-2 w-2 rounded-full bg-gold" />
           </button>
         </div>
         <Link
           href="/multiview"
-          className="hidden h-8 items-center gap-2 rounded-[4px] bg-[#9147ff] px-3.5 text-[13px] font-bold text-white shadow-[0_0_14px_rgba(145,71,255,0.35)] hover:bg-[#772ce8] lg:ml-2 lg:flex"
+          className="su-primary hidden h-8 items-center gap-2 rounded-[4px] px-3.5 text-[13px] font-bold text-white lg:ml-2 lg:flex"
         >
           <MultiviewIcon className="h-4 w-4" />
           Enter a Lecture Hall
@@ -993,7 +993,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
           href="https://x.com/daiviksiddhi"
           target="_blank"
           rel="noreferrer"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#9147ff] text-white hover:bg-[#772ce8]"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-burgundy text-white hover:bg-wine"
           aria-label="X profile"
         >
           <PersonIcon className="h-5 w-5" />
@@ -1022,8 +1022,8 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
                 <div className="relative min-w-0 flex-1">
                   <button
                     onClick={() => setIsRosterFilterOpen((current) => !current)}
-                    className={`flex h-9 w-full items-center justify-between rounded-[4px] bg-[#111114] px-3 transition hover:bg-[#18181b] ${
-                      isRosterFilterOpen ? "text-white" : "text-[#dedee3]"
+                    className={`flex h-9 w-full items-center justify-between rounded-[4px] border border-burgundy bg-[#2a171d] px-3 text-white transition hover:bg-[#321a22] ${
+                      isRosterFilterOpen ? "text-white" : ""
                     }`}
                     aria-label="Choose roster group"
                     aria-expanded={isRosterFilterOpen}
@@ -1038,7 +1038,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
                           key={item}
                           onClick={() => selectDirectoryFilter(item)}
                           className={`flex h-9 w-full items-center px-3 text-left transition hover:bg-[#2f2f35] ${
-                            filter === item ? "bg-[#2f2f35] text-white" : "text-[#dedee3]"
+                            filter === item ? "bg-burgundy text-white" : "text-[#dedee3]"
                           }`}
                         >
                           {item}
@@ -1050,7 +1050,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
                 <button
                   onClick={() => setLiveOnly((current) => !current)}
                   className={`h-9 shrink-0 rounded-[4px] px-3 transition ${
-                    liveOnly ? "bg-[#9147ff] text-white" : "bg-[#111114] text-[#dedee3] hover:bg-[#18181b]"
+                    liveOnly ? "su-primary text-white" : "bg-[#111114] text-[#dedee3] hover:bg-[#18181b]"
                   }`}
                   aria-pressed={liveOnly}
                 >
@@ -1102,8 +1102,8 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
             {campusLiveCount > 0 && (
               <div className="mb-5 flex items-center justify-center gap-2 text-[13px] text-[#adadb8]">
                 <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#eb0400] opacity-60" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#eb0400]" />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-live opacity-60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-live" />
                 </span>
                 <span>
                   <span className="font-semibold text-white">{campusLiveCount}</span> live on campus
@@ -1160,7 +1160,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
                   >
                     <StreamThumbnail channel={featuredChannel} className="transition duration-300 group-hover:scale-[1.02]" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/25" />
-                    {featuredChannel.live && <span className="absolute left-3 top-3 rounded-[3px] bg-[#eb0400] px-2 py-1 text-[13px] font-black">LIVE</span>}
+                    {featuredChannel.live && <span className="absolute left-3 top-3 rounded-[3px] bg-live px-2 py-1 text-[13px] font-black">LIVE</span>}
                     <div className="absolute bottom-3 left-3 rounded-[3px] bg-black/65 px-2 py-1 text-[15px] font-semibold">
                       {featuredChannel.live ? `${formatViewers(featuredChannel.viewers)} viewers` : "Offline"}
                     </div>
@@ -1169,11 +1169,11 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
                     <div className="flex gap-3">
                       <Avatar channel={featuredChannel} size="lg" />
                       <div className="min-w-0">
-                        <button className="truncate text-left text-[18px] font-bold text-[#bf94ff] hover:underline">
+                        <button className="truncate text-left text-[18px] font-bold text-white hover:text-gold hover:underline">
                           {featuredChannel.name}
                         </button>
                         <p className="truncate text-[15px] text-white">{featuredChannel.category}</p>
-                        <p className="truncate text-[14px] text-[#adadb8]">{featuredChannel.campusRole}</p>
+                        <p className="truncate text-[14px] text-gold-soft">{featuredChannel.campusRole}</p>
                         <p className="text-[14px] text-[#dedee3]">
                           {featuredChannel.live ? `${formatViewers(featuredChannel.viewers)} viewers` : "Offline"}
                         </p>
@@ -1190,7 +1190,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
                     <div className="mt-auto flex gap-2 pt-5">
                       <button
                         onClick={() => openChannel(featuredChannel.login)}
-                        className="h-9 flex-1 rounded-[4px] bg-[#9147ff] px-3 text-[14px] font-bold text-white hover:bg-[#772ce8]"
+                        className="su-primary h-9 flex-1 rounded-[4px] px-3 text-[14px] font-bold text-white"
                       >
                         Watch
                       </button>
@@ -1276,7 +1276,7 @@ function DirectoryLoading() {
           className="h-16 w-16 object-contain"
         />
         <span
-          className="mt-5 h-7 w-7 animate-spin rounded-full border-[3px] border-[#3b3b44] border-t-[#9147ff]"
+          className="mt-5 h-7 w-7 animate-spin rounded-full border-[3px] border-[#3b3b44] border-t-gold"
           aria-hidden="true"
         />
         <p className="mt-4 text-[15px] font-semibold text-[#dedee3]">Loading campus streams</p>
@@ -1310,7 +1310,7 @@ function Footer() {
             href="https://www.twitch.tv/p/legal/privacy-notice/"
             target="_blank"
             rel="noreferrer"
-            className="text-[#bf94ff] hover:underline"
+            className="text-[#adadb8] hover:text-white hover:underline"
           >
             Privacy Notice
           </a>
@@ -1473,11 +1473,11 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
         <Link href="/" className="grid h-9 w-9 place-items-center rounded-[4px] hover:bg-[#26262c]" aria-label="Streamer University home">
           <img src="/su-crest-2026-transparent.png" alt="" className="h-7 w-7 object-contain" />
         </Link>
-        <Link href="/" className="hidden px-2 text-[15px] font-semibold text-white hover:text-[#bf94ff] sm:block">
+        <Link href="/" className="hidden px-2 text-[15px] font-semibold text-white hover:text-gold sm:block">
           Browse
         </Link>
-        <div className="flex items-center gap-2 border-l border-[#34343b] pl-3">
-          <MultiviewIcon className="h-4 w-4 text-[#bf94ff]" />
+        <div className="flex h-full items-center gap-2 border-b-2 border-burgundy border-l border-l-[#34343b] pl-3">
+          <MultiviewIcon className="h-4 w-4 text-gold" />
           <span className="text-[15px] font-semibold text-white">Lecture Hall</span>
           <span className="rounded-full bg-[#2f2f35] px-2 py-0.5 text-[12px] font-semibold text-[#dedee3]">
             {selectedChannels.length}/4
@@ -1493,7 +1493,7 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
             aria-expanded={isPickerOpen}
           >
             <span className="hidden sm:inline">Live on campus</span>
-            <span className="text-[#bf94ff]">{liveChannels.length}</span>
+            <span className="text-live-soft">{liveChannels.length}</span>
             <ChevronDownIcon className={`h-4 w-4 transition-transform ${isPickerOpen ? "rotate-180" : ""}`} />
           </button>
           {isPickerOpen && (
@@ -1516,7 +1516,7 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
               <div className="absolute left-0 top-[calc(100%+8px)] z-50 flex h-[calc(50vh-32px)] w-[min(350px,calc(100vw-24px))] flex-col overflow-hidden rounded-r-[4px] border border-[#34343b] bg-[#1f1f23] shadow-[0_10px_24px_rgba(0,0,0,0.55)]">
                 <div className="flex h-11 shrink-0 items-center justify-between border-b border-[#34343b] px-3">
                   <span className="text-[14px] font-bold text-white">Live on campus</span>
-                  <span className="text-[13px] font-semibold text-[#bf94ff]">{liveChannels.length}</span>
+                  <span className="text-[13px] font-semibold text-live-soft">{liveChannels.length}</span>
                 </div>
                 <div className="min-h-0 overflow-y-auto py-1">
                   {isLoading ? (
@@ -1542,12 +1542,12 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
                             <span className="block truncate text-[12px] text-[#adadb8]">{channel.category}</span>
                           </span>
                           {isSelected ? (
-                            <span className="grid h-5 w-5 place-items-center rounded-[3px] bg-[#9147ff] text-[12px] font-bold text-white">
+                            <span className="grid h-5 w-5 place-items-center rounded-[3px] bg-burgundy text-[12px] font-bold text-white">
                               {selectionIndex + 1}
                             </span>
                           ) : (
                             <span className="flex items-center gap-1 text-[12px] text-[#dedee3]">
-                              <span className="h-2 w-2 rounded-full bg-[#eb0400]" />
+                              <span className="h-2 w-2 rounded-full bg-live" />
                               {formatViewers(channel.viewers)}
                             </span>
                           )}
@@ -1726,7 +1726,7 @@ function MultiPlayerGrid({
               <button
                 onClick={() => onSelectChat(channel.login)}
                 className={`pointer-events-auto flex min-w-0 items-center gap-1.5 rounded-[4px] px-1.5 py-1 text-left text-[12px] font-semibold text-white ${
-                  isActiveChat ? "bg-[#9147ff]" : "bg-black/60 hover:bg-[#2f2f35]"
+                  isActiveChat ? "bg-burgundy" : "bg-black/60 hover:bg-[#2f2f35]"
                 }`}
               >
                 <Avatar channel={channel} size="sm" />
@@ -1736,7 +1736,7 @@ function MultiPlayerGrid({
                 <button
                   onClick={() => onSelectAudio(isActiveAudio ? null : channel.login)}
                   className={`grid h-7 w-7 place-items-center rounded-[4px] ${
-                    isActiveAudio ? "bg-[#9147ff] text-white" : "bg-black/60 text-[#dedee3] hover:bg-[#2f2f35]"
+                    isActiveAudio ? "bg-burgundy text-white" : "bg-black/60 text-[#dedee3] hover:bg-[#2f2f35]"
                   }`}
                   aria-label={isActiveAudio ? `Mute ${channel.name}` : `Listen to ${channel.name}`}
                 >
@@ -1821,8 +1821,10 @@ function SidebarSection({
           <button
             key={channel.login}
             onClick={() => onSelect(channel.login)}
-            className={`flex h-[46px] w-full items-center gap-3 px-3 text-left hover:bg-[#26262c] ${
-              activeLogin === channel.login ? "bg-[#2f2f35]" : ""
+            className={`flex h-[46px] w-full items-center gap-3 border-l-2 text-left hover:bg-[#26262c] ${
+              activeLogin === channel.login
+                ? "border-burgundy bg-[#2a2024] pl-[10px] pr-3"
+                : "border-transparent px-3"
             }`}
           >
             <Avatar channel={channel} size="sm" />
@@ -1834,7 +1836,7 @@ function SidebarSection({
                 </span>
                 {channel.live ? (
                   <span className="flex shrink-0 items-center gap-1.5 text-[14px] text-[#dedee3]">
-                    <span className="h-2 w-2 rounded-full bg-[#eb0400]" />
+                    <span className="h-2 w-2 rounded-full bg-live" />
                     {formatViewers(channel.viewers)}
                   </span>
                 ) : (
@@ -1848,7 +1850,7 @@ function SidebarSection({
       {!collapsed && sorted.length > limit && (
         <button
           onClick={() => setExpanded((current) => !current)}
-          className="px-3 py-2 text-[14px] font-semibold text-[#bf94ff] hover:underline"
+          className="px-3 py-2 text-[14px] font-semibold text-[#dedee3] hover:text-white hover:underline"
         >
           {expanded ? "Show Less" : "Show More"}
         </button>
@@ -1942,13 +1944,13 @@ function WatchStage({
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex min-w-0 gap-4">
               <div className="relative shrink-0">
-                <span className={`grid place-items-center rounded-full p-[3px] ${channel.live ? "bg-[#eb0400]" : "bg-transparent"}`}>
+                <span className={`grid place-items-center rounded-full p-[3px] ${channel.live ? "bg-live" : "bg-transparent"}`}>
                   <span className="grid place-items-center rounded-full bg-[#0e0e10] p-[3px]">
                     <Avatar channel={channel} size="lg" />
                   </span>
                 </span>
                 {channel.live && (
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-[4px] border-2 border-[#0e0e10] bg-[#eb0400] px-1 text-[12px] font-bold uppercase text-white">
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-[4px] border-2 border-[#0e0e10] bg-live px-1 text-[12px] font-bold uppercase text-white">
                     Live
                   </span>
                 )}
@@ -1956,13 +1958,13 @@ function WatchStage({
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <h1 className="truncate text-[20px] font-semibold text-white">{channel.name}</h1>
-                  {channel.verified && <VerifiedIcon className="h-4 w-4 shrink-0 text-[#bf94ff]" />}
+                  {channel.verified && <VerifiedIcon className="h-4 w-4 shrink-0 text-gold" />}
                 </div>
                 <p className="mt-0.5 line-clamp-2 text-[14px] font-semibold text-white">{channel.title}</p>
                 <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
                   <button
                     onClick={() => onCategory(channel.category)}
-                    className="text-[14px] font-semibold text-[#bf94ff] hover:underline"
+                    className="text-[14px] font-semibold text-[#adadb8] hover:text-white hover:underline"
                   >
                     {channel.category}
                   </button>
@@ -1983,7 +1985,7 @@ function WatchStage({
                   href={`https://www.twitch.tv/${channel.login}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex h-8 items-center gap-1.5 rounded-[4px] bg-[#9147ff] px-3 text-[13px] font-semibold text-white hover:bg-[#772ce8]"
+                  className="su-primary flex h-8 items-center gap-1.5 rounded-[4px] px-3 text-[13px] font-semibold text-white"
                 >
                   <HeartIcon className="h-4 w-4" />
                   Follow
@@ -2021,7 +2023,7 @@ function WatchStage({
           <section className="mt-6 rounded-[4px] bg-[#1f1f23] p-5">
             <div className="flex items-center gap-1.5">
               <h2 className="text-[18px] font-semibold text-white">About {channel.name}</h2>
-              {channel.verified && <VerifiedIcon className="h-4 w-4 text-[#bf94ff]" />}
+              {channel.verified && <VerifiedIcon className="h-4 w-4 text-gold" />}
             </div>
             <p className="mt-2 text-[14px] text-[#dedee3]">
               {channel.campusRole} at Streamer University · Streams {channel.category}.
@@ -2030,7 +2032,7 @@ function WatchStage({
               href={`https://www.twitch.tv/${channel.login}`}
               target="_blank"
               rel="noreferrer"
-              className="mt-2 inline-block text-[14px] font-semibold text-[#bf94ff] hover:underline"
+              className="mt-2 inline-block text-[14px] font-semibold text-[#adadb8] hover:text-white hover:underline"
             >
               twitch.tv/{channel.login}
             </a>
@@ -2050,6 +2052,16 @@ function WatchStage({
         )}
       </aside>
     </div>
+  );
+}
+
+function SectionHeading({ title, accent, className = "" }: { title: string; accent: string; className?: string }) {
+  return (
+    <h2 className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-[20px] font-bold ${className}`}>
+      <span className="h-4 w-[3px] shrink-0 rounded-full bg-gold" aria-hidden="true" />
+      <span className="text-white">{title}</span>
+      <span className="text-[#dedee3]">{accent}</span>
+    </h2>
   );
 }
 
@@ -2077,9 +2089,7 @@ function ChannelShelf({
   if (!shelfChannels.length) {
     return (
       <section id={id} className="mb-8 scroll-mt-[70px] border-t border-[#2f2f35] pt-6">
-        <h2 className="text-[20px] font-bold">
-          <span className="text-[#bf94ff]">{title}</span> {accent}
-        </h2>
+        <SectionHeading title={title} accent={accent} />
         <div className="mt-4 bg-[#18181b] px-4 py-8 text-center text-[#adadb8]">No channels match this search.</div>
       </section>
     );
@@ -2087,22 +2097,20 @@ function ChannelShelf({
 
   return (
     <section id={id} className="mb-8 scroll-mt-[70px]">
-      <h2 className="mb-4 text-[20px] font-bold">
-        <span className="text-[#bf94ff]">{title}</span> {accent}
-      </h2>
+      <SectionHeading title={title} accent={accent} className="mb-4" />
       <div className="grid gap-x-3 gap-y-7 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {shelfChannels.slice(0, visibleCount).map((channel) => (
           <button key={channel.login} onClick={() => onSelect(channel.login)} className="group min-w-0 text-left">
             <div className="relative">
-              <div className="absolute inset-0 bg-[#9147ff]" aria-hidden="true" />
+              <div className="absolute inset-0 bg-burgundy" aria-hidden="true" />
               <div
                 className={`relative aspect-video overflow-hidden bg-[#18181b] transition-transform duration-100 ease-out group-hover:-translate-y-1.5 group-hover:translate-x-1.5 ${
-                  activeLogin === channel.login ? "outline outline-2 outline-[#9147ff]" : ""
+                  activeLogin === channel.login ? "outline outline-2 outline-burgundy" : ""
                 }`}
               >
                 <StreamThumbnail channel={channel} />
                 {channel.live ? (
-                  <span className="absolute left-2.5 top-2.5 rounded-[4px] bg-[#eb0400] px-1.5 py-0.5 text-[13px] font-semibold uppercase">
+                  <span className="absolute left-2.5 top-2.5 rounded-[4px] bg-live px-1.5 py-0.5 text-[13px] font-semibold uppercase">
                     LIVE
                   </span>
                 ) : (
@@ -2120,7 +2128,7 @@ function ChannelShelf({
             <div className="mt-2.5 flex gap-2.5">
               <Avatar channel={channel} size="md" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[14px] font-semibold text-white group-hover:text-[#bf94ff]">
+                <p className="truncate text-[14px] font-semibold text-white group-hover:text-gold">
                   {channel.title}
                 </p>
                 <p className="mt-0.5 truncate text-[13px] text-[#adadb8]">{channel.name}</p>
@@ -2148,7 +2156,7 @@ function ChannelShelf({
               onClick={() =>
                 setVisibleCount((current) => Math.min(current + initialCount, shelfChannels.length))
               }
-              className="flex items-center gap-1 rounded-[4px] px-3 py-1.5 text-[13px] font-semibold text-[#bf94ff] hover:bg-[#26262c]"
+              className="flex items-center gap-1 rounded-[4px] px-3 py-1.5 text-[13px] font-semibold text-[#dedee3] hover:bg-[#26262c] hover:text-white"
             >
               Show more
               <ChevronDownIcon className="h-4 w-4" />
@@ -2156,7 +2164,7 @@ function ChannelShelf({
           ) : (
             <button
               onClick={() => setVisibleCount(initialCount)}
-              className="flex items-center gap-1 rounded-[4px] px-3 py-1.5 text-[13px] font-semibold text-[#bf94ff] hover:bg-[#26262c]"
+              className="flex items-center gap-1 rounded-[4px] px-3 py-1.5 text-[13px] font-semibold text-[#dedee3] hover:bg-[#26262c] hover:text-white"
             >
               Show less
               <ChevronDownIcon className="h-4 w-4 rotate-180" />
@@ -2187,9 +2195,7 @@ function CatchUpShelf({ clips, channels }: { clips: TwitchClip[]; channels: Chan
 
   return (
     <section className="mb-8">
-      <h2 className="mb-4 text-[20px] font-bold">
-        <span className="text-[#bf94ff]">Trending</span> in the dorms
-      </h2>
+      <SectionHeading title="Trending" accent="in the dorms" className="mb-4" />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {clips.slice(0, 4).map((clip) => {
           const channel = channelsByLogin.get(clip.broadcaster_login.toLowerCase());
@@ -2249,14 +2255,14 @@ function CategoryArt({ name, src }: { name: string; src?: string }) {
 
   if (name === "Streamer University") {
     return (
-      <div className="grid h-full w-full place-items-center bg-gradient-to-br from-[#6E1325] to-[#3D0A16] p-2">
+      <div className="grid h-full w-full place-items-center bg-[#18181b] p-2">
         <img src="/su-crest-2026-transparent.png" alt="" className="w-3/4 object-contain" />
       </div>
     );
   }
 
   return (
-    <div className="grid h-full w-full place-items-center bg-gradient-to-br from-[#9147ff] to-[#2b1852] p-2">
+    <div className="grid h-full w-full place-items-center border border-[#34343b] bg-[#26262c] p-2">
       <span className="text-center text-[14px] font-bold leading-tight text-white">{name}</span>
     </div>
   );
@@ -2275,19 +2281,17 @@ function CategoryShelf({
 
   return (
     <section className="mb-8">
-      <h2 className="mb-4 text-[20px] font-bold">
-        <span className="text-[#bf94ff]">Course catalog</span>{" "}what campus is streaming
-      </h2>
+      <SectionHeading title="Course catalog" accent="what campus is streaming" className="mb-4" />
       <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8">
         {categories.map((category) => (
           <button key={category.name} onClick={() => onSelect(category.name)} className="group min-w-0 text-left">
             <div className="relative">
-              <div className="absolute inset-0 bg-[#9147ff]" aria-hidden="true" />
+              <div className="absolute inset-0 bg-burgundy" aria-hidden="true" />
               <div className="relative aspect-[285/380] overflow-hidden bg-[#26262c] transition-transform duration-100 ease-out group-hover:-translate-y-1.5 group-hover:translate-x-1.5">
                 <CategoryArt name={category.name} src={art[category.name]} />
               </div>
             </div>
-            <p className="mt-1.5 truncate text-[14px] font-semibold text-white group-hover:text-[#bf94ff]">
+            <p className="mt-1.5 truncate text-[14px] font-semibold text-white group-hover:text-gold">
               {category.name}
             </p>
             <p className="truncate text-[13px] text-[#adadb8]">
@@ -2334,7 +2338,7 @@ function SidebarCategories({
             </span>
             {category.viewers > 0 && (
               <span className="flex shrink-0 items-center gap-1.5 text-[14px] text-[#dedee3]">
-                <span className="h-2 w-2 rounded-full bg-[#eb0400]" />
+                <span className="h-2 w-2 rounded-full bg-live" />
                 {formatViewers(category.viewers)}
               </span>
             )}
@@ -2370,7 +2374,7 @@ function CategoryView({
     <div>
       <button
         onClick={onClear}
-        className="mb-4 flex items-center gap-1 rounded-[4px] py-1 pl-1 pr-2 text-[13px] font-semibold text-[#bf94ff] hover:bg-[#26262c]"
+        className="mb-4 flex items-center gap-1 rounded-[4px] py-1 pl-1 pr-2 text-[13px] font-semibold text-[#dedee3] hover:bg-[#26262c] hover:text-white"
       >
         <ChevronLeftIcon className="h-4 w-4" />
         Back to Browse
@@ -2534,8 +2538,8 @@ function MultiviewLayoutPreview({
   active: boolean;
 }) {
   const count = Math.max(1, Math.min(channelCount, 4));
-  const playerClass = active ? "bg-[#0074d9] text-white" : "bg-[#06345c] text-[#9c9ca6]";
-  const chatClass = active ? "bg-[#bda8dc] text-white" : "bg-[#5c5365] text-[#a9a3af]";
+  const playerClass = active ? "bg-burgundy text-white" : "bg-wine text-gold-soft";
+  const chatClass = active ? "bg-gold text-[#21150a]" : "bg-[#5A431E] text-gold-soft";
   const player = (number: number, className = "") => (
     <span className={`grid min-h-0 place-items-center text-[12px] font-bold ${playerClass} ${className}`}>{number}</span>
   );
