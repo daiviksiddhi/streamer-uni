@@ -833,8 +833,9 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
     });
   }, [mergedChannels, query]);
 
+  // Only surface categories someone on campus is actually streaming right now
   const displayCategories = categoryStats.filter(
-    (category) => !excludedCategories.has(category.name)
+    (category) => !excludedCategories.has(category.name) && category.liveCount > 0
   );
 
   const activeChannel =
@@ -842,6 +843,11 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
   const watchChannel =
     mergedChannels.find((channel) => channel.login === watchLogin) ?? null;
   const liveChannels = visibleChannels.filter((channel) => channel.live);
+  const campusLiveCount = mergedChannels.filter((channel) => channel.live).length;
+  const campusViewers = mergedChannels.reduce(
+    (sum, channel) => sum + (channel.live ? channel.viewers : 0),
+    0
+  );
   const spotlightChannels = useMemo(() => getSpotlightChannels(mergedChannels), [mergedChannels]);
   const currentSpotlightIndex =
     spotlightChannels.length > 0 ? featuredIndex % spotlightChannels.length : 0;
@@ -945,10 +951,10 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         </div>
         <Link
           href="/multiview"
-          className="hidden h-8 items-center gap-1.5 rounded-[4px] px-3 text-[13px] font-semibold text-[#dedee3] hover:bg-[#2f2f35] hover:text-white lg:flex"
+          className="hidden h-8 items-center gap-2 rounded-[4px] bg-[#9147ff] px-3.5 text-[13px] font-bold text-white shadow-[0_0_14px_rgba(145,71,255,0.35)] hover:bg-[#772ce8] lg:flex"
         >
           <MultiviewIcon className="h-4 w-4" />
-          Multiview
+          Enter a Lecture Hall
         </Link>
         <a
           href="https://shop.streameruniversity.com"
@@ -1039,6 +1045,24 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
               />
             ) : (
             <>
+            {campusLiveCount > 0 && (
+              <div className="mb-5 flex items-center justify-center gap-2 text-[13px] text-[#adadb8]">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#eb0400] opacity-60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#eb0400]" />
+                </span>
+                <span>
+                  <span className="font-semibold text-white">{campusLiveCount}</span> live on campus
+                </span>
+                <span className="text-[#3b3b44]">·</span>
+                <span>
+                  <span className="font-semibold text-white">
+                    {campusViewers > 0 ? formatViewers(campusViewers) : "0"}
+                  </span>{" "}
+                  watching right now
+                </span>
+              </div>
+            )}
             <section className="relative mb-8 min-h-[292px] overflow-hidden xl:min-h-[390px]">
               <button
                 onClick={() => moveFeatured(-1)}
@@ -1126,8 +1150,8 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
             </section>
 
             <ChannelShelf
-              title="Live channels"
-              accent="we think you'll like"
+              title="Live on campus"
+              accent="who's streaming right now"
               channels={[
                 ...(liveChannels.length > 1
                   ? liveChannels.filter((channel) => channel.login !== featuredChannel.login)
@@ -1145,7 +1169,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
 
             <ChannelShelf
               title="Rising on campus"
-              accent="small streams that deserve some love"
+              accent="freshmen who deserve some love"
               channels={[...liveChannels]
                 .filter((channel) => channel.viewers > 0)
                 .sort((a, b) => a.viewers - b.viewers)
@@ -1156,8 +1180,8 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
 
             <ChannelShelf
               id="faculty-directory"
-              title="Streamer University"
-              accent="faculty"
+              title="Faculty"
+              accent="deans, professors & campus staff"
               channels={[...visibleChannels]
                 .filter((channel) => channel.role === "Faculty")
                 .sort((a, b) => Number(b.live) - Number(a.live) || b.viewers - a.viewers)}
@@ -1168,8 +1192,8 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
 
             <ChannelShelf
               id="student-directory"
-              title="Streamer University"
-              accent="students"
+              title="Student body"
+              accent="the class of 2026"
               channels={[...visibleChannels]
                 .filter((channel) => channel.role === "Student")
                 .sort((a, b) => Number(b.live) - Number(a.live) || b.viewers - a.viewers)}
@@ -1400,7 +1424,7 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
         </Link>
         <div className="flex items-center gap-2 border-l border-[#34343b] pl-3">
           <MultiviewIcon className="h-4 w-4 text-[#bf94ff]" />
-          <span className="text-[15px] font-semibold text-white">Multiview</span>
+          <span className="text-[15px] font-semibold text-white">Lecture Hall</span>
           <span className="rounded-full bg-[#2f2f35] px-2 py-0.5 text-[12px] font-semibold text-[#dedee3]">
             {selectedChannels.length}/4
           </span>
@@ -2110,7 +2134,7 @@ function CatchUpShelf({ clips, channels }: { clips: TwitchClip[]; channels: Chan
   return (
     <section className="mb-8">
       <h2 className="mb-4 text-[20px] font-bold">
-        <span className="text-[#bf94ff]">Catch up</span> on popular streams
+        <span className="text-[#bf94ff]">Trending</span> in the dorms
       </h2>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {clips.slice(0, 4).map((clip) => {
@@ -2198,7 +2222,7 @@ function CategoryShelf({
   return (
     <section className="mb-8">
       <h2 className="mb-4 text-[20px] font-bold">
-        <span className="text-[#bf94ff]">Categories</span>{" "}we think you&apos;ll like
+        <span className="text-[#bf94ff]">Course catalog</span>{" "}what campus is streaming
       </h2>
       <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8">
         {categories.map((category) => (
