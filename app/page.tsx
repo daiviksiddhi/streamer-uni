@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 type Channel = {
@@ -625,8 +626,8 @@ const getInitials = (name: string) =>
 
 // Browsers block autoplay with sound, so start muted — this lets the player
 // begin immediately without the manual play click; viewers can unmute in-player.
-const getWatchUrl = (login: string, parent: string) =>
-  `https://player.twitch.tv/?channel=${encodeURIComponent(login)}&parent=${encodeURIComponent(parent)}&autoplay=true&muted=true`;
+const getWatchUrl = (login: string, parent: string, muted = true) =>
+  `https://player.twitch.tv/?channel=${encodeURIComponent(login)}&parent=${encodeURIComponent(parent)}&autoplay=true&muted=${muted}`;
 
 const getChatUrl = (login: string, parent: string) =>
   `https://www.twitch.tv/embed/${encodeURIComponent(login)}/chat?parent=${encodeURIComponent(parent)}&darkpopout`;
@@ -942,6 +943,13 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
             <span className="absolute right-1 top-0.5 h-2 w-2 rounded-full bg-[#bf94ff]" />
           </button>
         </div>
+        <Link
+          href="/multiview"
+          className="hidden h-8 items-center gap-1.5 rounded-[4px] px-3 text-[13px] font-semibold text-[#dedee3] hover:bg-[#2f2f35] hover:text-white lg:flex"
+        >
+          <MultiviewIcon className="h-4 w-4" />
+          Multiview
+        </Link>
         <a
           href="https://shop.streameruniversity.com"
           target="_blank"
@@ -1254,6 +1262,454 @@ function Footer() {
 
 export default function Home() {
   return <StreamerApp />;
+}
+
+type MultiviewLayout = "Focus" | "Grid" | "Wide";
+
+export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] }) {
+  const router = useRouter();
+  const [liveOverrides, setLiveOverrides] = useState<Record<string, Partial<Channel>>>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [embedParent, setEmbedParent] = useState("");
+  const [layout, setLayout] = useState<MultiviewLayout>("Focus");
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [selectedLogins, setSelectedLogins] = useState(() =>
+    Array.from(new Set(initialLogins.map((login) => login.toLowerCase())))
+      .filter((login) => channels.some((channel) => channel.login === login))
+      .slice(0, 4)
+  );
+  const [activeChatLogin, setActiveChatLogin] = useState(() => initialLogins[0]?.toLowerCase() ?? "");
+  const [audioLogin, setAudioLogin] = useState<string | null>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setEmbedParent(window.location.hostname), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const userChunks = chunkItems(
+      channels.map((channel) => channel.login),
+      100
+    );
+    let ignore = false;
+
+    Promise.all(
+      userChunks.map((users) =>
+        fetch(`/api/twitch/live?users=${encodeURIComponent(users.join(","))}`).then((response) =>
+          response.json() as Promise<{
+            configured?: boolean;
+            streams?: TwitchStream[];
+            users?: TwitchUser[];
+          }>
+        )
+      )
+    )
+      .then((payloads) => {
+        if (ignore || payloads.some((payload) => !payload.configured)) return;
+        const nextOverrides = channels.reduce<Record<string, Partial<Channel>>>((acc, channel) => {
+          acc[channel.login] = { live: false, viewers: 0 };
+          return acc;
+        }, {});
+
+        payloads.flatMap((payload) => payload.users ?? []).forEach((user) => {
+          const login = user.login?.toLowerCase();
+          if (!login) return;
+          nextOverrides[login] = {
+            ...nextOverrides[login],
+            name: user.display_name || undefined,
+            avatar: user.profile_image_url || undefined,
+            broadcasterType: user.broadcaster_type || undefined,
+            verified: user.broadcaster_type === "partner"
+          };
+        });
+
+        payloads.flatMap((payload) => payload.streams ?? []).forEach((stream) => {
+          const login = stream.user_login?.toLowerCase();
+          if (!login) return;
+          nextOverrides[login] = {
+            ...nextOverrides[login],
+            live: true,
+            viewers: stream.viewer_count ?? 0,
+            category: stream.game_name || undefined,
+            title: stream.title || undefined
+          };
+        });
+
+        if (!ignore) setLiveOverrides(nextOverrides);
+      })
+      .catch(() => {
+        if (!ignore) setLiveOverrides({});
+      })
+      .finally(() => {
+        if (!ignore) setIsLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const directory = useMemo(
+    () => channels.map((channel) => ({ ...channel, ...liveOverrides[channel.login] })),
+    [liveOverrides]
+  );
+  const liveChannels = useMemo(
+    () =>
+      directory
+        .filter((channel) => channel.live)
+        .sort((a, b) => b.viewers - a.viewers),
+    [directory]
+  );
+  const selectedChannels = selectedLogins
+    .map((login) => directory.find((channel) => channel.login === login))
+    .filter((channel): channel is Channel => Boolean(channel?.live));
+  const activeChatChannel =
+    selectedChannels.find((channel) => channel.login === activeChatLogin) ?? selectedChannels[0] ?? null;
+  const usesSharedChat = layout === "Focus" || (layout === "Grid" && selectedChannels.length === 4);
+  const usesInlineChats = layout === "Grid" && selectedChannels.length <= 2;
+  const usesGridChatTile = layout === "Grid" && selectedChannels.length === 3;
+
+  const updateSelection = (nextLogins: string[]) => {
+    setSelectedLogins(nextLogins);
+    if (!nextLogins.includes(activeChatLogin)) setActiveChatLogin(nextLogins[0] ?? "");
+    if (audioLogin && !nextLogins.includes(audioLogin)) setAudioLogin(null);
+    const query = nextLogins.length ? `?channels=${encodeURIComponent(nextLogins.join(","))}` : "";
+    router.replace(`/multiview${query}`, { scroll: false });
+  };
+
+  const toggleChannel = (login: string) => {
+    if (selectedLogins.includes(login)) {
+      updateSelection(selectedLogins.filter((current) => current !== login));
+      return;
+    }
+    if (selectedLogins.length >= 4) return;
+    updateSelection([...selectedLogins, login]);
+  };
+
+  return (
+    <main className="min-h-screen bg-[#0e0e10] text-[#efeff1]">
+      <header className="fixed inset-x-0 top-0 z-40 flex h-[50px] items-center gap-2 border-b border-[#2f2f35] bg-[#18181b] px-3 shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+        <Link href="/" className="grid h-9 w-9 place-items-center rounded-[4px] hover:bg-[#26262c]" aria-label="Streamer University home">
+          <img src="/su-crest-2026-transparent.png" alt="" className="h-7 w-7 object-contain" />
+        </Link>
+        <Link href="/" className="hidden px-2 text-[15px] font-semibold text-white hover:text-[#bf94ff] sm:block">
+          Browse
+        </Link>
+        <div className="flex items-center gap-2 border-l border-[#34343b] pl-3">
+          <MultiviewIcon className="h-4 w-4 text-[#bf94ff]" />
+          <span className="text-[15px] font-semibold text-white">Multiview</span>
+          <span className="rounded-full bg-[#2f2f35] px-2 py-0.5 text-[12px] font-semibold text-[#dedee3]">
+            {selectedChannels.length}/4
+          </span>
+        </div>
+        <div className="relative">
+          <button
+            onClick={() => setIsPickerOpen((current) => !current)}
+            className={`flex h-8 items-center gap-2 rounded-[4px] px-2.5 text-[13px] font-semibold transition hover:bg-[#2f2f35] ${
+              isPickerOpen ? "bg-[#2f2f35] text-white" : "text-[#dedee3]"
+            }`}
+            aria-label={isPickerOpen ? "Collapse live channel picker" : "Expand live channel picker"}
+            aria-expanded={isPickerOpen}
+          >
+            <span className="hidden sm:inline">Live on campus</span>
+            <span className="text-[#bf94ff]">{liveChannels.length}</span>
+            <ChevronDownIcon className={`h-4 w-4 transition-transform ${isPickerOpen ? "rotate-180" : ""}`} />
+          </button>
+          {isPickerOpen && (
+            <>
+              <div className="absolute right-full top-[calc(100%+8px)] z-50 flex w-[68px] flex-col gap-1 border border-r-0 border-[#34343b] bg-[#18181b] p-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.55)]">
+                {(["Focus", "Grid", "Wide"] as const).map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => setLayout(option)}
+                    className={`grid h-[58px] w-[54px] place-items-center rounded-[3px] p-1 transition ${
+                      layout === option ? "bg-[#26262c]" : "hover:bg-[#26262c]"
+                    }`}
+                    aria-label={`${option} layout`}
+                    title={`${option} layout`}
+                  >
+                    <MultiviewLayoutPreview layout={option} channelCount={selectedChannels.length} active={layout === option} />
+                  </button>
+                ))}
+              </div>
+              <div className="absolute left-0 top-[calc(100%+8px)] z-50 flex h-[calc(50vh-32px)] w-[min(350px,calc(100vw-24px))] flex-col overflow-hidden rounded-r-[4px] border border-[#34343b] bg-[#1f1f23] shadow-[0_10px_24px_rgba(0,0,0,0.55)]">
+                <div className="flex h-11 shrink-0 items-center justify-between border-b border-[#34343b] px-3">
+                  <span className="text-[14px] font-bold text-white">Live on campus</span>
+                  <span className="text-[13px] font-semibold text-[#bf94ff]">{liveChannels.length}</span>
+                </div>
+                <div className="min-h-0 overflow-y-auto py-1">
+                  {isLoading ? (
+                    <div className="px-3 py-6 text-center text-[13px] text-[#adadb8]">Loading live channels</div>
+                  ) : (
+                    liveChannels.map((channel) => {
+                      const isSelected = selectedLogins.includes(channel.login);
+                      const atLimit = selectedLogins.length >= 4 && !isSelected;
+                      const selectionIndex = selectedLogins.indexOf(channel.login);
+
+                      return (
+                        <button
+                          key={channel.login}
+                          onClick={() => toggleChannel(channel.login)}
+                          disabled={atLimit}
+                          className={`flex h-[52px] w-full items-center gap-2.5 px-3 text-left transition hover:bg-[#26262c] disabled:cursor-not-allowed disabled:opacity-45 ${
+                            isSelected ? "bg-[#2f2f35]" : ""
+                          }`}
+                        >
+                          <Avatar channel={channel} size="sm" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[14px] font-semibold text-white">{channel.name}</span>
+                            <span className="block truncate text-[12px] text-[#adadb8]">{channel.category}</span>
+                          </span>
+                          {isSelected ? (
+                            <span className="grid h-5 w-5 place-items-center rounded-[3px] bg-[#9147ff] text-[12px] font-bold text-white">
+                              {selectionIndex + 1}
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1 text-[12px] text-[#dedee3]">
+                              <span className="h-2 w-2 rounded-full bg-[#eb0400]" />
+                              {formatViewers(channel.viewers)}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+        <div className="ml-auto" />
+        <a
+          href="https://shop.streameruniversity.com"
+          target="_blank"
+          rel="noreferrer"
+          className="hidden h-8 items-center rounded-[999px] bg-[#2f2f35] px-4 text-[13px] font-bold hover:bg-[#3b3b44] md:flex"
+        >
+          Buy Merch
+        </a>
+      </header>
+
+      <div className={`grid min-h-screen pt-[50px] xl:h-screen xl:min-h-0 ${usesSharedChat ? "xl:grid-cols-[minmax(0,1fr)_350px]" : "xl:grid-cols-1"}`}>
+        <section className="flex min-w-0 flex-col bg-[#0e0e10] p-3 sm:p-4 xl:min-h-0">
+          {isLoading ? (
+            <div className="grid min-h-[440px] place-items-center text-[14px] text-[#adadb8] xl:min-h-0 xl:flex-1">Loading multiview</div>
+          ) : selectedChannels.length ? (
+            usesInlineChats ? (
+              <div className="grid min-h-[660px] gap-2 xl:h-full xl:min-h-0 xl:grid-rows-[minmax(0,3fr)_minmax(0,2fr)]">
+                <MultiPlayerGrid
+                  channels={selectedChannels}
+                  layout={layout}
+                  parent={embedParent}
+                  activeChatLogin={activeChatChannel?.login ?? ""}
+                  audioLogin={audioLogin}
+                  onSelectChat={setActiveChatLogin}
+                  onSelectAudio={setAudioLogin}
+                  onRemove={(login) => updateSelection(selectedLogins.filter((current) => current !== login))}
+                />
+                <MultiStreamChatGrid channels={selectedChannels} parent={embedParent} />
+              </div>
+            ) : usesGridChatTile ? (
+              <div className="min-h-[440px] xl:min-h-0 xl:flex-1">
+                <MultiPlayerGrid
+                  channels={selectedChannels}
+                  layout={layout}
+                  parent={embedParent}
+                  activeChatLogin={activeChatChannel?.login ?? ""}
+                  audioLogin={audioLogin}
+                  onSelectChat={setActiveChatLogin}
+                  onSelectAudio={setAudioLogin}
+                  onRemove={(login) => updateSelection(selectedLogins.filter((current) => current !== login))}
+                  chatTile={<SharedChatTile channel={activeChatChannel} parent={embedParent} />}
+                />
+              </div>
+            ) : (
+              <div className="min-h-[440px] xl:min-h-0 xl:flex-1">
+                <MultiPlayerGrid
+                  channels={selectedChannels}
+                  layout={layout}
+                  parent={embedParent}
+                  activeChatLogin={activeChatChannel?.login ?? ""}
+                  audioLogin={audioLogin}
+                  onSelectChat={setActiveChatLogin}
+                  onSelectAudio={setAudioLogin}
+                  onRemove={(login) => updateSelection(selectedLogins.filter((current) => current !== login))}
+                />
+              </div>
+            )
+          ) : (
+            <div className="grid min-h-[440px] place-items-center border border-dashed border-[#3b3b44] bg-[#18181b] text-[15px] font-semibold text-[#adadb8] xl:min-h-0 xl:flex-1">
+              No live channels selected
+            </div>
+          )}
+        </section>
+
+        {usesSharedChat && <aside className="flex min-h-[440px] flex-col border-t border-[#2f2f35] bg-[#18181b] xl:sticky xl:top-[50px] xl:h-[calc(100vh-50px)] xl:border-l xl:border-t-0">
+          <div className="flex h-12 items-center border-b border-[#2f2f35] px-3">
+            <h2 className="flex-1 text-center text-[16px] font-bold text-white">Stream Chat</h2>
+          </div>
+          {selectedChannels.length > 0 && (
+            <div className="flex gap-1 overflow-x-auto border-b border-[#2f2f35] px-2 py-2">
+              {selectedChannels.map((channel) => (
+                <button
+                  key={channel.login}
+                  onClick={() => setActiveChatLogin(channel.login)}
+                  className={`flex h-8 shrink-0 items-center gap-1.5 rounded-[4px] px-1.5 ${
+                    activeChatChannel?.login === channel.login ? "bg-[#2f2f35]" : "hover:bg-[#26262c]"
+                  }`}
+                  aria-label={`Show ${channel.name}'s chat`}
+                >
+                  <Avatar channel={channel} size="sm" />
+                  <span className="max-w-[92px] truncate text-[12px] font-semibold text-[#dedee3]">{channel.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {activeChatChannel && embedParent ? (
+            <iframe
+              src={getChatUrl(activeChatChannel.login, embedParent)}
+              title={`${activeChatChannel.name} Twitch chat`}
+              className="min-h-0 w-full flex-1 border-0"
+            />
+          ) : (
+            <div className="grid flex-1 place-items-center text-[14px] text-[#adadb8]">No chat selected</div>
+          )}
+        </aside>}
+      </div>
+    </main>
+  );
+}
+
+function MultiPlayerGrid({
+  channels,
+  layout,
+  parent,
+  activeChatLogin,
+  audioLogin,
+  onSelectChat,
+  onSelectAudio,
+  onRemove,
+  chatTile
+}: {
+  channels: Channel[];
+  layout: MultiviewLayout;
+  parent: string;
+  activeChatLogin: string;
+  audioLogin: string | null;
+  onSelectChat: (login: string) => void;
+  onSelectAudio: (login: string | null) => void;
+  onRemove: (login: string) => void;
+  chatTile?: ReactNode;
+}) {
+  const gridClass =
+    layout === "Grid"
+      ? "grid-cols-1 sm:grid-cols-2"
+      : layout === "Wide"
+        ? channels.length <= 2
+          ? "grid-cols-1"
+          : channels.length === 3
+            ? "grid-cols-1 lg:grid-cols-2 lg:grid-rows-2"
+            : "grid-cols-1 sm:grid-cols-2"
+          : channels.length <= 2
+          ? "grid-cols-1"
+          : channels.length === 4
+            ? "grid-cols-1 lg:grid-cols-3 lg:grid-rows-2"
+            : "grid-cols-1 lg:grid-cols-2 lg:grid-rows-2";
+
+  return (
+    <div className={`grid min-h-[440px] gap-2 xl:h-full xl:min-h-0 ${gridClass}`}>
+      {channels.map((channel, index) => {
+        const tileClass =
+          (layout === "Focus" || layout === "Wide") && channels.length === 3 && index === 0
+            ? "lg:col-span-2"
+            : layout === "Focus" && channels.length === 4 && index === 0
+              ? "lg:col-span-3"
+              : "";
+        const isActiveChat = activeChatLogin === channel.login;
+        const isActiveAudio = audioLogin === channel.login;
+
+        return (
+          <div key={channel.login} className={`relative min-h-[300px] overflow-hidden bg-black xl:min-h-0 ${tileClass}`}>
+            {parent ? (
+              <iframe
+                src={getWatchUrl(channel.login, parent, !isActiveAudio)}
+                title={`${channel.name} Twitch stream`}
+                allowFullScreen
+                allow="autoplay; fullscreen; picture-in-picture"
+                className="absolute inset-0 h-full w-full border-0"
+              />
+            ) : (
+              <StreamThumbnail channel={channel} />
+            )}
+            <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent p-2">
+              <button
+                onClick={() => onSelectChat(channel.login)}
+                className={`pointer-events-auto flex min-w-0 items-center gap-1.5 rounded-[4px] px-1.5 py-1 text-left text-[12px] font-semibold text-white ${
+                  isActiveChat ? "bg-[#9147ff]" : "bg-black/60 hover:bg-[#2f2f35]"
+                }`}
+              >
+                <Avatar channel={channel} size="sm" />
+                <span className="max-w-[120px] truncate">{channel.name}</span>
+              </button>
+              <span className="pointer-events-auto flex items-center gap-1">
+                <button
+                  onClick={() => onSelectAudio(isActiveAudio ? null : channel.login)}
+                  className={`grid h-7 w-7 place-items-center rounded-[4px] ${
+                    isActiveAudio ? "bg-[#9147ff] text-white" : "bg-black/60 text-[#dedee3] hover:bg-[#2f2f35]"
+                  }`}
+                  aria-label={isActiveAudio ? `Mute ${channel.name}` : `Listen to ${channel.name}`}
+                >
+                  <VolumeIcon muted={!isActiveAudio} />
+                </button>
+                <button
+                  onClick={() => onRemove(channel.login)}
+                  className="grid h-7 w-7 place-items-center rounded-[4px] bg-black/60 text-[#dedee3] hover:bg-[#2f2f35]"
+                  aria-label={`Remove ${channel.name}`}
+                >
+                  <CloseIcon />
+                </button>
+              </span>
+            </div>
+          </div>
+        );
+      })}
+      {chatTile && <div className="relative min-h-[300px] overflow-hidden bg-[#18181b] xl:min-h-0">{chatTile}</div>}
+    </div>
+  );
+}
+
+function SharedChatTile({ channel, parent }: { channel: Channel | null; parent: string }) {
+  if (!channel || !parent) {
+    return <div className="grid h-full place-items-center text-[13px] text-[#adadb8]">Loading chat</div>;
+  }
+
+  return (
+    <iframe
+      src={getChatUrl(channel.login, parent)}
+      title={`${channel.name} Twitch chat`}
+      className="h-full w-full border-0"
+    />
+  );
+}
+
+function MultiStreamChatGrid({ channels, parent }: { channels: Channel[]; parent: string }) {
+  return (
+    <div className="grid min-h-[220px] grid-cols-1 gap-2 border-t border-[#2f2f35] pt-2 sm:grid-cols-2 xl:min-h-0 xl:h-full">
+      {channels.map((channel) => (
+        <div key={channel.login} className="relative min-h-[220px] overflow-hidden border border-[#2f2f35] bg-[#18181b] xl:min-h-0">
+          {parent ? (
+            <iframe
+              src={getChatUrl(channel.login, parent)}
+              title={`${channel.name} Twitch chat`}
+              className="h-full w-full border-0"
+            />
+          ) : (
+            <div className="grid h-full place-items-center text-[13px] text-[#adadb8]">Loading chat</div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function SidebarSection({
@@ -1973,6 +2429,156 @@ function PersonIcon({ className = "h-5 w-5" }: { className?: string }) {
     <svg viewBox="0 0 20 20" fill="currentColor" className={className} aria-hidden="true">
       <path d="M10 9.8a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8zM3.5 17a6.5 6.5 0 0 1 13 0v.3h-13V17z" />
     </svg>
+  );
+}
+
+function MultiviewIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <IconBase className={className}>
+      <rect x="3" y="3" width="5.5" height="5.5" />
+      <rect x="11.5" y="3" width="5.5" height="5.5" />
+      <rect x="3" y="11.5" width="5.5" height="5.5" />
+      <rect x="11.5" y="11.5" width="5.5" height="5.5" />
+    </IconBase>
+  );
+}
+
+function MultiviewLayoutPreview({
+  layout,
+  channelCount,
+  active
+}: {
+  layout: MultiviewLayout;
+  channelCount: number;
+  active: boolean;
+}) {
+  const count = Math.max(1, Math.min(channelCount, 4));
+  const playerClass = active ? "bg-[#0074d9] text-white" : "bg-[#06345c] text-[#9c9ca6]";
+  const chatClass = active ? "bg-[#bda8dc] text-white" : "bg-[#5c5365] text-[#a9a3af]";
+  const player = (number: number, className = "") => (
+    <span className={`grid min-h-0 place-items-center text-[12px] font-bold ${playerClass} ${className}`}>{number}</span>
+  );
+  const chat = (className = "") => (
+    <span className={`grid min-h-0 place-items-center text-[12px] font-bold ${chatClass} ${className}`}>C</span>
+  );
+
+  if (layout === "Focus") {
+    if (count === 4) {
+      return (
+        <div className="grid h-full w-full grid-cols-[1fr_1fr_1fr_10px] grid-rows-2 gap-[2px]">
+          {player(1, "col-span-3")}
+          {player(2)}
+          {player(3)}
+          {player(4)}
+          {chat("col-start-4 row-span-2 row-start-1")}
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid h-full w-full grid-cols-[1fr_1fr_10px] grid-rows-2 gap-[2px]">
+        {player(1, count === 1 ? "col-span-2 row-span-2" : "col-span-2")}
+        {count >= 2 && player(2, count === 2 ? "col-span-2" : "")}
+        {count >= 3 && player(3)}
+        {chat("col-start-3 row-span-2 row-start-1")}
+      </div>
+    );
+  }
+
+  if (layout === "Grid") {
+    if (count === 1) {
+      return (
+        <div className="grid h-full w-full grid-cols-[1fr_10px] gap-[2px]">
+          {player(1)}
+          {chat()}
+        </div>
+      );
+    }
+
+    if (count === 2) {
+      return (
+        <div className="grid h-full w-full grid-cols-2 grid-rows-[1fr_10px] gap-[2px]">
+          {player(1)}
+          {player(2)}
+          {chat()}
+          {chat()}
+        </div>
+      );
+    }
+
+    if (count === 3) {
+      return (
+        <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-[2px]">
+          {player(1)}
+          {player(2)}
+          {player(3)}
+          {chat()}
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid h-full w-full grid-cols-[1fr_1fr_10px] grid-rows-2 gap-[2px]">
+        {player(1)}
+        {player(2)}
+        {player(3)}
+        {player(4)}
+        {chat("col-start-3 row-span-2 row-start-1")}
+      </div>
+    );
+  }
+
+  if (count === 1) {
+    return (
+      <div className="grid h-full w-full">
+        {player(1)}
+      </div>
+    );
+  }
+
+  if (count === 2) {
+    return (
+      <div className="grid h-full w-full grid-rows-2 gap-[2px]">
+        {player(1)}
+        {player(2)}
+      </div>
+    );
+  }
+
+  if (count === 4) {
+    return (
+      <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-[2px]">
+        {player(1)}
+        {player(2)}
+        {player(3)}
+        {player(4)}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-[2px]">
+      {player(1, "col-span-2")}
+      {player(2)}
+      {player(3)}
+    </div>
+  );
+}
+
+function VolumeIcon({ muted }: { muted: boolean }) {
+  return (
+    <IconBase className="h-4 w-4">
+      <path d="M4 8h3l3-3v10l-3-3H4z" />
+      {muted ? <path d="m13 8 3 3m0-3-3 3" /> : <path d="M13 8a3 3 0 0 1 0 4" />}
+    </IconBase>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <IconBase className="h-4 w-4">
+      <path d="m5.5 5.5 9 9m0-9-9 9" />
+    </IconBase>
   );
 }
 
