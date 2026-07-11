@@ -638,6 +638,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
   const [activeLogin, setActiveLogin] = useState(initialLogin ?? channels[0].login);
   const [watchLogin, setWatchLogin] = useState<string | null>(initialLogin ?? null);
   const [query, setQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
   const [sideOpen, setSideOpen] = useState(true);
   const [embedParent, setEmbedParent] = useState("");
   const [filter, setFilter] = useState<"All" | "Faculty" | "Students">("All");
@@ -821,18 +822,22 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
       .sort((a, b) => b.viewers - a.viewers || b.total - a.total);
   }, [mergedChannels]);
 
-  const visibleChannels = useMemo(() => {
+  // Search suggests channels in a dropdown instead of filtering the page
+  const visibleChannels = mergedChannels;
+
+  const searchResults = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    return mergedChannels.filter((channel) => {
-      const queryMatch =
-        !normalized ||
-        channel.login.toLowerCase().includes(normalized) ||
-        channel.name.toLowerCase().includes(normalized) ||
-        channel.campusRole.toLowerCase().includes(normalized) ||
-        channel.category.toLowerCase().includes(normalized) ||
-        channel.title.toLowerCase().includes(normalized);
-      return queryMatch;
-    });
+    if (!normalized) return [];
+    return mergedChannels
+      .filter(
+        (channel) =>
+          channel.login.toLowerCase().includes(normalized) ||
+          channel.name.toLowerCase().includes(normalized) ||
+          channel.campusRole.toLowerCase().includes(normalized) ||
+          channel.category.toLowerCase().includes(normalized)
+      )
+      .sort((a, b) => Number(b.live) - Number(a.live) || b.viewers - a.viewers)
+      .slice(0, 8);
   }, [mergedChannels, query]);
 
   const sidebarChannels = useMemo(
@@ -938,7 +943,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         >
           <img src="/su-crest-2026-transparent.png" alt="" className="h-8 w-8 object-contain" />
         </button>
-        <button onClick={browseHome} className="hidden h-full border-b-2 border-burgundy px-4 text-[15px] font-semibold text-white hover:text-gold sm:block">
+        <button onClick={browseHome} className="hidden h-full px-4 text-[15px] font-semibold text-white hover:text-gold sm:block">
           Following
         </button>
         <button onClick={browseHome} className="hidden h-full px-4 text-[15px] font-semibold text-white hover:text-gold sm:block">
@@ -947,18 +952,67 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         <button className="hidden h-8 w-8 items-center justify-center rounded-[4px] hover:bg-[#2f2f35] md:flex" aria-label="More">
           <KebabIcon />
         </button>
-        <label className="mx-auto flex h-9 w-full max-w-[540px] overflow-hidden rounded-[6px] border border-[#67676b] bg-[#18181b] focus-within:border-burgundy focus-within:bg-[#0e0e10]">
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            className="min-w-0 flex-1 bg-transparent px-4 text-[15px] text-white outline-none placeholder:text-[#adadb8]"
-            placeholder="Search"
-            type="search"
-          />
-          <span className="flex w-11 items-center justify-center rounded-r-[6px] bg-[#2f2f35] text-[#dedee3]" aria-hidden="true">
-            <span className="search-glyph" />
-          </span>
-        </label>
+        <div className="relative mx-auto w-full max-w-[540px]">
+          <label className="flex h-9 w-full overflow-hidden rounded-[6px] border border-[#67676b] bg-[#18181b] focus-within:border-burgundy focus-within:bg-[#0e0e10]">
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && searchResults.length) {
+                  openChannel(searchResults[0].login);
+                  setQuery("");
+                  event.currentTarget.blur();
+                } else if (event.key === "Escape") {
+                  event.currentTarget.blur();
+                }
+              }}
+              className="min-w-0 flex-1 bg-transparent px-4 text-[15px] text-white outline-none placeholder:text-[#adadb8]"
+              placeholder="Search"
+              type="search"
+            />
+            <span className="flex w-11 items-center justify-center rounded-r-[6px] bg-[#2f2f35] text-[#dedee3]" aria-hidden="true">
+              <span className="search-glyph" />
+            </span>
+          </label>
+          {searchFocused && query.trim().length > 0 && (
+            <div className="absolute inset-x-0 top-full z-50 mt-1.5 overflow-hidden rounded-[6px] bg-[#1f1f23] shadow-[0_8px_24px_rgba(0,0,0,0.6)]">
+              {searchResults.length ? (
+                searchResults.map((channel) => (
+                  <button
+                    key={channel.login}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => {
+                      openChannel(channel.login);
+                      setQuery("");
+                      setSearchFocused(false);
+                    }}
+                    className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-[#26262c]"
+                  >
+                    <Avatar channel={channel} size="sm" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[14px] font-semibold text-white">{channel.name}</span>
+                      <span className="block truncate text-[12px] text-[#adadb8]">
+                        {channel.campusRole} · {channel.category}
+                      </span>
+                    </span>
+                    {channel.live ? (
+                      <span className="flex shrink-0 items-center gap-1.5 text-[13px] text-[#dedee3]">
+                        <span className="h-2 w-2 rounded-full bg-[#eb0400]" />
+                        {formatViewers(channel.viewers)}
+                      </span>
+                    ) : (
+                      <span className="shrink-0 text-[13px] text-[#adadb8]">Offline</span>
+                    )}
+                  </button>
+                ))
+              ) : (
+                <p className="px-3 py-3 text-[13px] text-[#adadb8]">No campus channels found</p>
+              )}
+            </div>
+          )}
+        </div>
         <div className="hidden items-center gap-1.5 lg:flex">
           <button className="relative grid h-8 w-8 place-items-center rounded-[4px] hover:bg-[#2f2f35]" aria-label="Activity feed">
             <TrayIcon />
