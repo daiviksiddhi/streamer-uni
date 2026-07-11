@@ -650,6 +650,22 @@ const chunkItems = <T,>(items: T[], size: number) => {
   return chunks;
 };
 
+const mergeChannelData = (channel: Channel, override?: Partial<Channel>): Channel => {
+  const merged = { ...channel, ...override };
+
+  return {
+    ...merged,
+    name: merged.name || channel.name,
+    category: merged.category || channel.category,
+    title: merged.title || channel.title,
+    tags: merged.tags || channel.tags,
+    avatar: merged.avatar || channel.avatar,
+    thumbnail: merged.thumbnail || channel.thumbnail,
+    offlineImage: merged.offlineImage || channel.offlineImage,
+    broadcasterType: merged.broadcasterType || channel.broadcasterType
+  };
+};
+
 const getInitials = (name: string) =>
   name
     .replace(/[_-]+/g, " ")
@@ -908,7 +924,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
   const mergedChannels = useMemo(
     () =>
       channels.map((channel) => {
-        const merged = { ...channel, ...liveOverrides[channel.login] };
+        const merged = mergeChannelData(channel, liveOverrides[channel.login]);
 
         return {
           ...merged,
@@ -971,10 +987,9 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
     return mergedChannels
       .filter(
         (channel) =>
-          channel.login.toLowerCase().includes(normalized) ||
-          channel.name.toLowerCase().includes(normalized) ||
-          channel.campusRole.toLowerCase().includes(normalized) ||
-          channel.category.toLowerCase().includes(normalized)
+          [channel.login, channel.name, channel.campusRole, channel.category, channel.title].some(
+            (value) => Boolean(value?.toLowerCase().includes(normalized))
+          )
       )
       .sort((a, b) => Number(b.live) - Number(a.live) || b.viewers - a.viewers)
       .slice(0, 8);
@@ -1627,7 +1642,7 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
   }, []);
 
   const directory = useMemo(
-    () => channels.map((channel) => ({ ...channel, ...liveOverrides[channel.login] })),
+    () => channels.map((channel) => mergeChannelData(channel, liveOverrides[channel.login])),
     [liveOverrides]
   );
   const liveChannels = useMemo(
