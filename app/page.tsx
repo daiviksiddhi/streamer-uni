@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+type Platform = "twitch" | "kick" | "youtube" | "tiktok";
+
 type Channel = {
   login: string;
   name: string;
@@ -21,6 +23,9 @@ type Channel = {
   offlineImage?: string;
   broadcasterType?: string;
   accent: string;
+  platform: Platform;
+  platformHandle?: string;
+  youtubeVideoId?: string;
 };
 
 type SeedChannel = {
@@ -55,6 +60,24 @@ type TwitchUser = {
 type TwitchGame = {
   name?: string;
   box_art_url?: string;
+};
+
+type KickChannelStatus = {
+  slug?: string;
+  isLive?: boolean;
+  viewers?: number;
+  title?: string;
+  category?: string;
+  thumbnail?: string;
+};
+
+type YoutubeChannelStatus = {
+  handle?: string;
+  isLive?: boolean;
+  videoId?: string;
+  viewers?: number;
+  title?: string;
+  thumbnail?: string;
 };
 
 type TwitchClip = {
@@ -466,7 +489,7 @@ const studentHandles = [
   "yusuf7n",
   "xscapeverse",
   "silky",
-  "realbigant",
+  "real_bigant26",
   "taylorjasminee",
   "AngelCrackedU",
   "damiilive",
@@ -517,16 +540,26 @@ const studentAccents = [
   "#fb7185"
 ];
 
+// Campus members who stream somewhere other than Twitch, keyed by login
+const studentPlatforms: Record<string, { platform: Platform; handle: string }> = {
+  crystalizaguirre: { platform: "kick", handle: "crystalizaguirre" },
+  flippenjosh: { platform: "kick", handle: "Flippenjosh" },
+  blasianbeautyalexis: { platform: "tiktok", handle: "Blasianbeautyalexis" },
+  jaidabunni: { platform: "youtube", handle: "@Jaidabunni" }
+};
+
 const channels: Channel[] = [
   ...facultySeeds.map((channel, index) => ({
     ...channel,
     role: "Faculty" as const,
     live: false,
     viewers: 0,
-    accent: channel.accent ?? studentAccents[index % studentAccents.length]
+    accent: channel.accent ?? studentAccents[index % studentAccents.length],
+    platform: "twitch" as const
   })),
   ...studentHandles.map((handle, index) => {
     const category = studentCategories[index % studentCategories.length];
+    const platformInfo = studentPlatforms[handle.toLowerCase()];
 
     return {
       login: handle.toLowerCase(),
@@ -538,7 +571,9 @@ const channels: Channel[] = [
       viewers: 0,
       live: false,
       tags: ["Student", category],
-      accent: studentAccents[index % studentAccents.length]
+      accent: studentAccents[index % studentAccents.length],
+      platform: platformInfo?.platform ?? ("twitch" as const),
+      platformHandle: platformInfo?.handle
     };
   })
 ];
@@ -632,6 +667,51 @@ const getWatchUrl = (login: string, parent: string, muted = true) =>
 const getChatUrl = (login: string, parent: string) =>
   `https://www.twitch.tv/embed/${encodeURIComponent(login)}/chat?parent=${encodeURIComponent(parent)}&darkpopout`;
 
+const platformLabels: Record<Platform, string> = {
+  twitch: "Twitch",
+  kick: "Kick",
+  youtube: "YouTube",
+  tiktok: "TikTok"
+};
+
+const getChannelPageUrl = (channel: Channel) => {
+  if (channel.platform === "kick") return `https://kick.com/${channel.platformHandle}`;
+  if (channel.platform === "youtube") return `https://www.youtube.com/${channel.platformHandle}`;
+  if (channel.platform === "tiktok") return `https://www.tiktok.com/@${channel.platformHandle}`;
+  return `https://www.twitch.tv/${channel.login}`;
+};
+
+const getChannelPageLabel = (channel: Channel) => {
+  if (channel.platform === "kick") return `kick.com/${channel.platformHandle}`;
+  if (channel.platform === "youtube") return `youtube.com/${channel.platformHandle}`;
+  if (channel.platform === "tiktok") return `tiktok.com/@${channel.platformHandle}`;
+  return `twitch.tv/${channel.login}`;
+};
+
+const getPlayerUrl = (channel: Channel, parent: string, muted = true) => {
+  if (channel.platform === "kick") {
+    return `https://player.kick.com/${channel.platformHandle}?autoplay=true&muted=${muted}`;
+  }
+  if (channel.platform === "youtube") {
+    return channel.youtubeVideoId
+      ? `https://www.youtube.com/embed/${channel.youtubeVideoId}?autoplay=1&mute=${muted ? 1 : 0}`
+      : null;
+  }
+  if (channel.platform === "tiktok") return null;
+  return getWatchUrl(channel.login, parent, muted);
+};
+
+const getChatEmbedUrl = (channel: Channel, parent: string) => {
+  if (channel.platform === "kick") return `https://kick.com/popout/${channel.platformHandle}/chat`;
+  if (channel.platform === "youtube") {
+    return channel.youtubeVideoId
+      ? `https://www.youtube.com/live_chat?v=${channel.youtubeVideoId}&embed_domain=${encodeURIComponent(parent)}`
+      : null;
+  }
+  if (channel.platform === "tiktok") return null;
+  return getChatUrl(channel.login, parent);
+};
+
 export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string }) {
   const router = useRouter();
   const initialLogin = initialWatchLogin?.toLowerCase();
@@ -671,7 +751,9 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
     if (isDirectoryLoading) return;
 
     let ignore = false;
-    const users = channels.map((channel) => channel.login);
+    const users = channels
+      .filter((channel) => channel.platform === "twitch")
+      .map((channel) => channel.login);
 
     fetch(`/api/twitch/clips?users=${encodeURIComponent(users.join(","))}`)
       .then((response) =>
@@ -693,12 +775,18 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
 
   useEffect(() => {
     const userChunks = chunkItems(
-      channels.map((channel) => channel.login),
+      channels.filter((channel) => channel.platform === "twitch").map((channel) => channel.login),
       100
     );
+    const kickSlugs = channels
+      .filter((channel) => channel.platform === "kick" && channel.platformHandle)
+      .map((channel) => channel.platformHandle as string);
+    const youtubeHandles = channels
+      .filter((channel) => channel.platform === "youtube" && channel.platformHandle)
+      .map((channel) => channel.platformHandle as string);
     let ignore = false;
 
-    Promise.all(
+    const twitchRequests = Promise.all(
       userChunks.map((users) =>
         fetch(`/api/twitch/live?users=${encodeURIComponent(users.join(","))}`).then((response) =>
           response.json() as Promise<{
@@ -709,8 +797,20 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
           }>
         )
       )
-    )
-      .then((payloads) => {
+    );
+    const kickRequest: Promise<{ channels?: KickChannelStatus[] } | null> = kickSlugs.length
+      ? fetch(`/api/kick/live?slugs=${encodeURIComponent(kickSlugs.join(","))}`)
+          .then((response) => (response.ok ? response.json() : null))
+          .catch(() => null)
+      : Promise.resolve(null);
+    const youtubeRequest: Promise<{ channels?: YoutubeChannelStatus[] } | null> = youtubeHandles.length
+      ? fetch(`/api/youtube/live?handles=${encodeURIComponent(youtubeHandles.join(","))}`)
+          .then((response) => (response.ok ? response.json() : null))
+          .catch(() => null)
+      : Promise.resolve(null);
+
+    Promise.all([twitchRequests, kickRequest, youtubeRequest])
+      .then(([payloads, kickPayload, youtubePayload]) => {
         if (ignore || payloads.some((payload) => !payload.configured)) return;
         const nextOverrides = channels.reduce<Record<string, Partial<Channel>>>((acc, channel) => {
           acc[channel.login] = {
@@ -756,6 +856,40 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
           }
         });
 
+        (kickPayload?.channels ?? []).forEach((kickChannel) => {
+          const channel = channels.find(
+            (candidate) =>
+              candidate.platform === "kick" &&
+              candidate.platformHandle?.toLowerCase() === kickChannel.slug?.toLowerCase()
+          );
+          if (!channel) return;
+          nextOverrides[channel.login] = {
+            ...nextOverrides[channel.login],
+            live: Boolean(kickChannel.isLive),
+            viewers: kickChannel.viewers ?? 0,
+            title: kickChannel.title || undefined,
+            category: kickChannel.category || undefined,
+            thumbnail: kickChannel.thumbnail || undefined
+          };
+        });
+
+        (youtubePayload?.channels ?? []).forEach((youtubeChannel) => {
+          const channel = channels.find(
+            (candidate) =>
+              candidate.platform === "youtube" &&
+              candidate.platformHandle?.toLowerCase() === youtubeChannel.handle?.toLowerCase()
+          );
+          if (!channel) return;
+          nextOverrides[channel.login] = {
+            ...nextOverrides[channel.login],
+            live: Boolean(youtubeChannel.isLive),
+            viewers: youtubeChannel.viewers ?? 0,
+            title: youtubeChannel.title || undefined,
+            thumbnail: youtubeChannel.thumbnail || undefined,
+            youtubeVideoId: youtubeChannel.videoId || undefined
+          };
+        });
+
         setGameArt(nextArt);
         setLiveOverrides(nextOverrides);
       })
@@ -785,6 +919,12 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
   );
 
   const openChannel = (login: string) => {
+    // TikTok has no embeddable live player — send viewers straight to the profile
+    const channel = mergedChannels.find((candidate) => candidate.login === login);
+    if (channel?.platform === "tiktok") {
+      window.open(getChannelPageUrl(channel), "_blank", "noopener");
+      return;
+    }
     setActiveLogin(login);
     setWatchLogin(login);
     router.push(`/${login}`);
@@ -1410,7 +1550,9 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [selectedLogins, setSelectedLogins] = useState(() =>
     Array.from(new Set(initialLogins.map((login) => login.toLowerCase())))
-      .filter((login) => channels.some((channel) => channel.login === login))
+      .filter((login) =>
+        channels.some((channel) => channel.login === login && channel.platform === "twitch")
+      )
       .slice(0, 4)
   );
   const [activeChatLogin, setActiveChatLogin] = useState(() => initialLogins[0]?.toLowerCase() ?? "");
@@ -1423,7 +1565,7 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
 
   useEffect(() => {
     const userChunks = chunkItems(
-      channels.map((channel) => channel.login),
+      channels.filter((channel) => channel.platform === "twitch").map((channel) => channel.login),
       100
     );
     let ignore = false;
@@ -1977,14 +2119,17 @@ function WatchStage({
   parent: string;
   onCategory: (name: string) => void;
 }) {
+  const playerUrl = parent ? getPlayerUrl(channel, parent) : null;
+  const chatUrl = parent ? getChatEmbedUrl(channel, parent) : null;
+
   return (
     <div className="flex flex-col xl:flex-row">
       <div className="min-w-0 flex-1">
         <div className="relative aspect-video max-h-[calc(100svh-170px)] w-full bg-black">
-          {parent ? (
+          {playerUrl ? (
             <iframe
-              src={getWatchUrl(channel.login, parent)}
-              title={`${channel.name} Twitch stream`}
+              src={playerUrl}
+              title={`${channel.name} ${platformLabels[channel.platform]} stream`}
               allowFullScreen
               allow="autoplay; fullscreen; picture-in-picture"
               className="absolute inset-0 h-full w-full border-0"
@@ -2013,6 +2158,7 @@ function WatchStage({
                 <div className="flex items-center gap-1.5">
                   <h1 className="truncate text-[20px] font-semibold text-white">{channel.name}</h1>
                   {channel.verified && <VerifiedIcon className="h-4 w-4 shrink-0 text-gold" />}
+                  <PlatformBadge platform={channel.platform} />
                 </div>
                 <p className="mt-0.5 line-clamp-2 text-[14px] font-semibold text-white">{channel.title}</p>
                 <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -2036,7 +2182,7 @@ function WatchStage({
             <div className="flex shrink-0 flex-col items-start gap-2 lg:items-end">
               <div className="flex gap-2">
                 <a
-                  href={`https://www.twitch.tv/${channel.login}`}
+                  href={getChannelPageUrl(channel)}
                   target="_blank"
                   rel="noreferrer"
                   className="su-primary flex h-8 items-center gap-1.5 rounded-[4px] px-3 text-[13px] font-semibold text-white"
@@ -2045,7 +2191,11 @@ function WatchStage({
                   Follow
                 </a>
                 <a
-                  href={`https://www.twitch.tv/subs/${channel.login}`}
+                  href={
+                    channel.platform === "twitch"
+                      ? `https://www.twitch.tv/subs/${channel.login}`
+                      : getChannelPageUrl(channel)
+                  }
                   target="_blank"
                   rel="noreferrer"
                   className="flex h-8 items-center gap-1.5 rounded-[4px] bg-[#2f2f35] px-3 text-[13px] font-semibold text-white hover:bg-[#3b3b44]"
@@ -2083,24 +2233,42 @@ function WatchStage({
               {channel.campusRole} at Streamer University · Streams {channel.category}.
             </p>
             <a
-              href={`https://www.twitch.tv/${channel.login}`}
+              href={getChannelPageUrl(channel)}
               target="_blank"
               rel="noreferrer"
               className="mt-2 inline-block text-[14px] font-semibold text-[#adadb8] hover:text-white hover:underline"
             >
-              twitch.tv/{channel.login}
+              {getChannelPageLabel(channel)}
             </a>
           </section>
         </div>
       </div>
 
       <aside className="flex h-[480px] w-full shrink-0 flex-col border-t border-[#2f2f35] bg-[#18181b] xl:sticky xl:top-[50px] xl:h-[calc(100vh-50px)] xl:w-[376px] xl:border-l xl:border-t-0">
-        {parent ? (
+        {chatUrl ? (
           <iframe
-            src={getChatUrl(channel.login, parent)}
-            title={`${channel.name} Twitch chat`}
+            src={chatUrl}
+            title={`${channel.name} ${platformLabels[channel.platform]} chat`}
             className="min-h-0 w-full flex-1 border-0"
           />
+        ) : parent ? (
+          <div className="grid flex-1 place-items-center px-6 text-center">
+            <div>
+              <p className="text-[14px] text-[#adadb8]">
+                {channel.platform === "youtube" && !channel.live
+                  ? "Chat opens here when the stream goes live."
+                  : `Chat for this channel lives on ${platformLabels[channel.platform]}.`}
+              </p>
+              <a
+                href={getChannelPageUrl(channel)}
+                target="_blank"
+                rel="noreferrer"
+                className="su-primary mt-3 inline-flex h-8 items-center rounded-[4px] px-3 text-[13px] font-semibold text-white"
+              >
+                Open on {platformLabels[channel.platform]}
+              </a>
+            </div>
+          </div>
         ) : (
           <div className="grid flex-1 place-items-center text-[#adadb8]">Chat loading</div>
         )}
@@ -2185,7 +2353,10 @@ function ChannelShelf({
                 <p className="truncate text-[14px] font-semibold text-white group-hover:text-gold">
                   {channel.title}
                 </p>
-                <p className="mt-0.5 truncate text-[13px] text-[#adadb8]">{channel.name}</p>
+                <p className="mt-0.5 flex items-center gap-1.5 truncate text-[13px] text-[#adadb8]">
+                  {channel.name}
+                  <PlatformBadge platform={channel.platform} />
+                </p>
                 <p className="truncate text-[13px] text-[#adadb8]">{channel.category}</p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {channel.tags.slice(0, 2).map((tag) => (
@@ -2560,6 +2731,25 @@ function ShareIcon({ className }: { className?: string }) {
       <path d="M6.5 6 10 2.5 13.5 6" />
       <path d="M4 10.5V17h12v-6.5" />
     </IconBase>
+  );
+}
+
+function PlatformBadge({ platform, className = "" }: { platform: Platform; className?: string }) {
+  if (platform === "twitch") return null;
+
+  const styles: Record<Platform, string> = {
+    twitch: "",
+    kick: "bg-[#53fc18] text-black",
+    youtube: "bg-[#ff0000] text-white",
+    tiktok: "bg-white text-black"
+  };
+
+  return (
+    <span
+      className={`shrink-0 rounded-[3px] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${styles[platform]} ${className}`}
+    >
+      {platformLabels[platform]}
+    </span>
   );
 }
 
