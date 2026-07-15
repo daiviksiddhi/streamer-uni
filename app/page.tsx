@@ -198,18 +198,6 @@ const facultySeeds: SeedChannel[] = [
     accent: "#FFE08A"
   },
   {
-    login: "maya",
-    name: "Maya",
-    campusRole: "Professor",
-    category: "Animals, Aquariums, and Zoos",
-    title: "Community class: turning causes into compelling streams",
-    viewers: 22200,
-    live: true,
-    verified: true,
-    tags: ["Professor", "Community"],
-    accent: "#67e8a2"
-  },
-  {
     login: "cinna",
     name: "Cinna",
     campusRole: "Professor",
@@ -220,18 +208,6 @@ const facultySeeds: SeedChannel[] = [
     verified: true,
     tags: ["Professor", "Chat Lab"],
     accent: "#ff8fc7"
-  },
-  {
-    login: "pokimane",
-    name: "Pokimane",
-    campusRole: "Professor",
-    category: "Just Chatting",
-    title: "Creator class: brand, community, and longevity",
-    viewers: 51700,
-    live: true,
-    verified: true,
-    tags: ["Professor", "Creator Class"],
-    accent: "#fb7185"
   },
   {
     login: "adapt",
@@ -1430,6 +1406,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
               channels={[...liveChannels].sort((a, b) => b.viewers - a.viewers).slice(0, 8)}
               activeLogin={activeLogin}
               onSelect={openChannel}
+              emptyMessage="No channels are live right now. Check back at 3 PM ET when Streamer University starts."
             />
 
             <ChannelShelf
@@ -1445,6 +1422,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
                 .slice(0, 8)}
               activeLogin={activeLogin}
               onSelect={openChannel}
+              emptyMessage="No channels are live right now. Check back at 3 PM ET when Streamer University starts."
             />
 
             <CatchUpShelf clips={popularClips} channels={mergedChannels} />
@@ -1460,6 +1438,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
                 .slice(0, 8)}
               activeLogin={activeLogin}
               onSelect={openChannel}
+              emptyMessage="No channels are live right now. Check back at 3 PM ET when Streamer University starts."
             />
 
             <ChannelShelf
@@ -2593,6 +2572,7 @@ function ChannelShelf({
   activeLogin,
   onSelect,
   initialCount,
+  emptyMessage = "No channels match this search.",
   className = ""
 }: {
   id?: string;
@@ -2602,6 +2582,7 @@ function ChannelShelf({
   activeLogin: string;
   onSelect: (login: string) => void;
   initialCount?: number;
+  emptyMessage?: string;
   className?: string;
 }) {
   // Untruncated shelves must not freeze a count at mount time — channel lists
@@ -2627,7 +2608,7 @@ function ChannelShelf({
     return (
       <section id={id} className={`mb-8 scroll-mt-[70px] border-t border-[#2f2f35] pt-6 ${className}`}>
         <SectionHeading title={title} accent={accent} />
-        <div className="mt-4 bg-[#18181b] px-4 py-8 text-center text-[#adadb8]">No channels match this search.</div>
+        <div className="mt-4 bg-[#18181b] px-4 py-8 text-center text-[#adadb8]">{emptyMessage}</div>
       </section>
     );
   }
@@ -2741,21 +2722,49 @@ function formatClipAge(createdAt: string) {
 }
 
 function CatchUpShelf({ clips, channels }: { clips: TwitchClip[]; channels: Channel[] }) {
+  const clipsRowRef = useRef<HTMLDivElement>(null);
+
   if (!clips.length) return null;
 
   const channelsByLogin = new Map(channels.map((channel) => [channel.login, channel]));
+  const moveClips = (direction: number) => {
+    const row = clipsRowRef.current;
+    if (!row) return;
+
+    row.scrollBy({ left: direction * row.clientWidth * 0.85, behavior: "smooth" });
+  };
 
   return (
     <section className="mb-8">
-      <SectionHeading title="Trending" accent="in the dorms" className="mb-4" />
-      <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:-mx-6 sm:px-6 md:mx-0 md:grid md:snap-none md:grid-cols-2 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-4">
-        {clips.slice(0, 4).map((clip) => {
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <SectionHeading title="Trending" accent="in the dorms" />
+        <div className="hidden shrink-0 items-center gap-1 md:flex">
+          <button
+            onClick={() => moveClips(-1)}
+            className="grid h-8 w-8 place-items-center rounded-[4px] bg-[#26262c] text-[#dedee3] hover:bg-[#34343b] hover:text-white"
+            aria-label="Previous trending clips"
+            title="Previous clips"
+          >
+            <ChevronLeftIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => moveClips(1)}
+            className="grid h-8 w-8 place-items-center rounded-[4px] bg-[#26262c] text-[#dedee3] hover:bg-[#34343b] hover:text-white"
+            aria-label="Next trending clips"
+            title="Next clips"
+          >
+            <ChevronRightIcon className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+      <div ref={clipsRowRef} className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:-mx-6 sm:px-6 md:mx-0 md:px-0">
+        {clips.slice(0, 10).map((clip) => {
           const channel = channelsByLogin.get(clip.broadcaster_login.toLowerCase());
           const name = channel?.name || clip.broadcaster_name;
           const category = clip.game_name || channel?.category || "Streamer University";
 
           return (
-            <article key={clip.id} className="w-[62vw] max-w-[270px] shrink-0 snap-start md:w-auto md:max-w-none md:min-w-0">
+            <article key={clip.id} className="w-[62vw] max-w-[270px] shrink-0 snap-start md:w-[calc(50%-6px)] md:max-w-none xl:w-[calc(25%-9px)]">
               <a
                 href={clip.url}
                 target="_blank"
