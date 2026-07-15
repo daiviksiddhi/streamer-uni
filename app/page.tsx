@@ -641,16 +641,6 @@ const getSectionTitle = (section: string) => {
   return `${section}s`;
 };
 
-const chunkItems = <T,>(items: T[], size: number) => {
-  const chunks: T[][] = [];
-
-  for (let index = 0; index < items.length; index += size) {
-    chunks.push(items.slice(index, index + size));
-  }
-
-  return chunks;
-};
-
 const mergeChannelData = (channel: Channel, override?: Partial<Channel>): Channel => {
   const merged = { ...channel, ...override };
 
@@ -792,10 +782,9 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
   }, [isDirectoryLoading]);
 
   useEffect(() => {
-    const userChunks = chunkItems(
-      publicChannels.filter((channel) => channel.platform === "twitch").map((channel) => channel.login),
-      100
-    );
+    const twitchUsers = publicChannels
+      .filter((channel) => channel.platform === "twitch")
+      .map((channel) => channel.login);
     const kickSlugs = publicChannels
       .filter((channel) => channel.platform === "kick" && channel.platformHandle)
       .map((channel) => channel.platformHandle as string);
@@ -804,17 +793,16 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
       .map((channel) => channel.platformHandle as string);
     let ignore = false;
 
-    const twitchRequests = Promise.all(
-      userChunks.map((users) =>
-        fetch(`/api/twitch/live?users=${encodeURIComponent(users.join(","))}`).then((response) =>
-          response.json() as Promise<{
-            configured?: boolean;
-            streams?: TwitchStream[];
-            users?: TwitchUser[];
-            games?: TwitchGame[];
-          }>
-        )
-      )
+    const twitchRequest = fetch(
+      `/api/twitch/live?users=${encodeURIComponent(twitchUsers.join(","))}`
+    ).then(
+      (response) =>
+        response.json() as Promise<{
+          configured?: boolean;
+          streams?: TwitchStream[];
+          users?: TwitchUser[];
+          games?: TwitchGame[];
+        }>
     );
     const kickRequest: Promise<{ channels?: KickChannelStatus[] } | null> = kickSlugs.length
       ? fetch(`/api/kick/live?slugs=${encodeURIComponent(kickSlugs.join(","))}`)
@@ -827,9 +815,9 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
           .catch(() => null)
       : Promise.resolve(null);
 
-    Promise.all([twitchRequests, kickRequest, youtubeRequest])
-      .then(([payloads, kickPayload, youtubePayload]) => {
-        if (ignore || payloads.some((payload) => !payload.configured)) return;
+    Promise.all([twitchRequest, kickRequest, youtubeRequest])
+      .then(([twitchPayload, kickPayload, youtubePayload]) => {
+        if (ignore || !twitchPayload.configured) return;
         const nextOverrides = publicChannels.reduce<Record<string, Partial<Channel>>>((acc, channel) => {
           acc[channel.login] = {
             live: false,
@@ -838,7 +826,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
           return acc;
         }, {});
 
-        payloads.flatMap((payload) => payload.users ?? []).forEach((user) => {
+        (twitchPayload.users ?? []).forEach((user) => {
           const login = user.login?.toLowerCase();
           if (!login) return;
           nextOverrides[login] = {
@@ -852,7 +840,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
           };
         });
 
-        payloads.flatMap((payload) => payload.streams ?? []).forEach((stream) => {
+        (twitchPayload.streams ?? []).forEach((stream) => {
           const login = stream.user_login?.toLowerCase();
           if (!login) return;
           nextOverrides[login] = {
@@ -866,7 +854,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         });
 
         const nextArt: Record<string, string> = {};
-        payloads.flatMap((payload) => payload.games ?? []).forEach((game) => {
+        (twitchPayload.games ?? []).forEach((game) => {
           if (game.name && game.box_art_url) {
             nextArt[game.name] = game.box_art_url
               .replace("{width}", "285")
@@ -1767,31 +1755,28 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
   }, []);
 
   useEffect(() => {
-    const userChunks = chunkItems(
-      channels.filter((channel) => channel.platform === "twitch").map((channel) => channel.login),
-      100
-    );
+    const twitchUsers = channels
+      .filter((channel) => channel.platform === "twitch")
+      .map((channel) => channel.login);
     let ignore = false;
 
-    Promise.all(
-      userChunks.map((users) =>
-        fetch(`/api/twitch/live?users=${encodeURIComponent(users.join(","))}`).then((response) =>
+    fetch(`/api/twitch/live?users=${encodeURIComponent(twitchUsers.join(","))}`)
+      .then(
+        (response) =>
           response.json() as Promise<{
             configured?: boolean;
             streams?: TwitchStream[];
             users?: TwitchUser[];
           }>
-        )
       )
-    )
-      .then((payloads) => {
-        if (ignore || payloads.some((payload) => !payload.configured)) return;
+      .then((payload) => {
+        if (ignore || !payload.configured) return;
         const nextOverrides = channels.reduce<Record<string, Partial<Channel>>>((acc, channel) => {
           acc[channel.login] = { live: false, viewers: 0 };
           return acc;
         }, {});
 
-        payloads.flatMap((payload) => payload.users ?? []).forEach((user) => {
+        (payload.users ?? []).forEach((user) => {
           const login = user.login?.toLowerCase();
           if (!login) return;
           nextOverrides[login] = {
@@ -1803,7 +1788,7 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
           };
         });
 
-        payloads.flatMap((payload) => payload.streams ?? []).forEach((stream) => {
+        (payload.streams ?? []).forEach((stream) => {
           const login = stream.user_login?.toLowerCase();
           if (!login) return;
           nextOverrides[login] = {

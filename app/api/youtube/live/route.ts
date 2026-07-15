@@ -23,8 +23,23 @@ type YoutubeVideosResponse = {
 // The live-search endpoint costs 100 quota units per channel per check against
 // a 10,000/day default quota, so cache results for 20 minutes server-side.
 const DATA_TTL_MS = 20 * 60_000;
+const successCacheHeaders = {
+  "Cache-Control": "public, max-age=0, s-maxage=1200, stale-while-revalidate=3600",
+  "Vercel-CDN-Cache-Control": "s-maxage=1200, stale-while-revalidate=3600"
+};
+const noStoreHeaders = { "Cache-Control": "no-store" };
 const channelIdCache = new Map<string, string>();
 let dataCache: { key: string; payload: unknown; at: number } | null = null;
+
+function jsonResponse(payload: unknown, init?: ResponseInit) {
+  return NextResponse.json(payload, {
+    ...init,
+    headers: {
+      ...successCacheHeaders,
+      ...init?.headers
+    }
+  });
+}
 
 async function resolveChannelId(handle: string, key: string) {
   const normalized = handle.toLowerCase();
@@ -56,16 +71,16 @@ export async function GET(request: Request) {
   const key = process.env.YOUTUBE_API_KEY;
 
   if (!handles.length) {
-    return NextResponse.json({ configured: Boolean(key), channels: [] });
+    return jsonResponse({ configured: Boolean(key), channels: [] });
   }
 
   if (!key) {
-    return NextResponse.json({ configured: false, channels: [] });
+    return jsonResponse({ configured: false, channels: [] });
   }
 
   const cacheKey = handles.join(",").toLowerCase();
   if (dataCache && dataCache.key === cacheKey && Date.now() - dataCache.at < DATA_TTL_MS) {
-    return NextResponse.json(dataCache.payload);
+    return jsonResponse(dataCache.payload);
   }
 
   try {
@@ -119,11 +134,11 @@ export async function GET(request: Request) {
 
     const result = { configured: true, channels };
     dataCache = { key: cacheKey, payload: result, at: Date.now() };
-    return NextResponse.json(result);
+    return jsonResponse(result);
   } catch {
     return NextResponse.json(
       { configured: true, channels: [], error: "Unable to reach YouTube right now." },
-      { status: 502 }
+      { status: 502, headers: noStoreHeaders }
     );
   }
 }

@@ -26,6 +26,21 @@ type KickChannelsResponse = {
 let tokenCache: { token: string; expiresAt: number } | null = null;
 let dataCache: { key: string; payload: unknown; at: number } | null = null;
 const DATA_TTL_MS = 60_000;
+const successCacheHeaders = {
+  "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=120",
+  "Vercel-CDN-Cache-Control": "s-maxage=60, stale-while-revalidate=120"
+};
+const noStoreHeaders = { "Cache-Control": "no-store" };
+
+function jsonResponse(payload: unknown, init?: ResponseInit) {
+  return NextResponse.json(payload, {
+    ...init,
+    headers: {
+      ...successCacheHeaders,
+      ...init?.headers
+    }
+  });
+}
 
 async function getAppToken(clientId: string, clientSecret: string) {
   if (tokenCache && Date.now() < tokenCache.expiresAt - 60_000) {
@@ -67,16 +82,16 @@ export async function GET(request: Request) {
   const clientSecret = process.env.KICK_CLIENT_SECRET;
 
   if (!slugs.length) {
-    return NextResponse.json({ configured: Boolean(clientId && clientSecret), channels: [] });
+    return jsonResponse({ configured: Boolean(clientId && clientSecret), channels: [] });
   }
 
   if (!clientId || !clientSecret) {
-    return NextResponse.json({ configured: false, channels: [] });
+    return jsonResponse({ configured: false, channels: [] });
   }
 
   const cacheKey = slugs.join(",").toLowerCase();
   if (dataCache && dataCache.key === cacheKey && Date.now() - dataCache.at < DATA_TTL_MS) {
-    return NextResponse.json(dataCache.payload);
+    return jsonResponse(dataCache.payload);
   }
 
   try {
@@ -84,7 +99,7 @@ export async function GET(request: Request) {
     if (!token) {
       return NextResponse.json(
         { configured: true, channels: [], error: "Kick token request failed." },
-        { status: 502 }
+        { status: 502, headers: noStoreHeaders }
       );
     }
 
@@ -99,7 +114,7 @@ export async function GET(request: Request) {
     if (!response.ok) {
       return NextResponse.json(
         { configured: true, channels: [], error: `Kick channels request failed (${response.status}).` },
-        { status: 502 }
+        { status: 502, headers: noStoreHeaders }
       );
     }
 
@@ -115,11 +130,11 @@ export async function GET(request: Request) {
 
     const result = { configured: true, channels };
     dataCache = { key: cacheKey, payload: result, at: Date.now() };
-    return NextResponse.json(result);
+    return jsonResponse(result);
   } catch {
     return NextResponse.json(
       { configured: true, channels: [], error: "Unable to reach Kick right now." },
-      { status: 502 }
+      { status: 502, headers: noStoreHeaders }
     );
   }
 }

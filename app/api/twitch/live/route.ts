@@ -58,13 +58,23 @@ function jsonResponse(payload: unknown, init?: ResponseInit) {
   });
 }
 
+const chunkItems = <T,>(items: T[], size: number) => {
+  const chunks: T[][] = [];
+
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+
+  return chunks;
+};
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const users = (searchParams.get("users") ?? "")
     .split(",")
     .map((user) => user.trim().toLowerCase())
     .filter(Boolean)
-    .slice(0, 100);
+    .slice(0, 200);
 
   const clientId = process.env.TWITCH_CLIENT_ID;
   const clientSecret = process.env.TWITCH_CLIENT_SECRET;
@@ -83,47 +93,61 @@ export async function GET(request: Request) {
   try {
     const accessToken = await getAppAccessToken(clientId, clientSecret);
 
-    const streamParams = new URLSearchParams();
-    users.forEach((user) => streamParams.append("user_login", user));
-    const userParams = new URLSearchParams();
-    users.forEach((user) => userParams.append("login", user));
+    const channelPayloads = await Promise.all(
+      chunkItems(users, 100).map(async (usersChunk) => {
+        const streamParams = new URLSearchParams();
+        usersChunk.forEach((user) => streamParams.append("user_login", user));
+        const userParams = new URLSearchParams();
+        usersChunk.forEach((user) => userParams.append("login", user));
 
-    const [streamsResponse, usersResponse] = await Promise.all([
-      fetch(`https://api.twitch.tv/helix/streams?${streamParams.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Client-Id": clientId
-        },
-        next: {
-          revalidate: 60
-        }
-      }),
-      fetch(`https://api.twitch.tv/helix/users?${userParams.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Client-Id": clientId
-        },
-        next: {
-          revalidate: 3600
-        }
+        const [streamsResponse, usersResponse] = await Promise.all([
+          fetch(`https://api.twitch.tv/helix/streams?${streamParams.toString()}`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Client-Id": clientId
+            },
+            next: {
+              revalidate: 60
+            }
+          }),
+          fetch(`https://api.twitch.tv/helix/users?${userParams.toString()}`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Client-Id": clientId
+            },
+            next: {
+              revalidate: 3600
+            }
+          })
+        ]);
+
+        if (!streamsResponse.ok || !usersResponse.ok) return null;
+
+        const [streamsPayload, usersPayload] = await Promise.all([
+          streamsResponse.json() as Promise<TwitchStreamsResponse>,
+          usersResponse.json() as Promise<TwitchUsersResponse>
+        ]);
+
+        return {
+          streams: streamsPayload.data ?? [],
+          users: usersPayload.data ?? []
+        };
       })
-    ]);
+    );
 
-    if (!streamsResponse.ok || !usersResponse.ok) {
+    if (channelPayloads.some((payload) => !payload)) {
       return NextResponse.json(
         { configured: true, streams: [], users: [], error: "Twitch channel request failed." },
         { status: 502, headers: noStoreHeaders }
       );
     }
 
-    const [streamsPayload, usersPayload] = await Promise.all([
-      streamsResponse.json() as Promise<TwitchStreamsResponse>,
-      usersResponse.json() as Promise<TwitchUsersResponse>
-    ]);
+    const streams = channelPayloads.flatMap((payload) => payload?.streams ?? []);
+    const twitchUsers = channelPayloads.flatMap((payload) => payload?.users ?? []);
 
     // Resolve box art for whatever categories are live right now
     const gameIds = [
-      ...new Set((streamsPayload.data ?? []).map((stream) => stream.game_id).filter(Boolean))
+      ...new Set(streams.map((stream) => stream.game_id).filter(Boolean))
     ].slice(0, 100);
     let games: TwitchGame[] = [];
 
@@ -148,8 +172,8 @@ export async function GET(request: Request) {
 
     return jsonResponse({
       configured: true,
-      streams: streamsPayload.data ?? [],
-      users: usersPayload.data ?? [],
+      streams,
+      users: twitchUsers,
       games
     });
   } catch {
