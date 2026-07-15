@@ -1204,7 +1204,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
       <div className={`flex ${watchChannel ? "md:pt-[50px]" : "pt-[50px]"}`}>
         <aside
           className={`fixed bottom-0 left-0 top-[50px] z-30 hidden border-r border-[#2f2f35] bg-[#1f1f23] transition-all duration-200 md:block ${
-            sideOpen ? "w-[286px]" : "w-[58px]"
+            sideOpen ? (watchChannel ? "w-[240px]" : "w-[286px]") : "w-[58px]"
           }`}
         >
           <div className="flex h-full flex-col overflow-hidden">
@@ -1284,7 +1284,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
           </div>
         </aside>
 
-        <section className={`ml-0 min-w-0 flex-1 transition-[margin] duration-200 ${!watchChannel ? "pb-[58px] md:pb-0" : ""} ${sideOpen ? "md:ml-[286px]" : "md:ml-[58px]"}`}>
+        <section className={`ml-0 min-w-0 flex-1 transition-[margin] duration-200 ${!watchChannel ? "pb-[58px] md:pb-0" : ""} ${sideOpen ? (watchChannel ? "md:ml-[240px]" : "md:ml-[286px]") : "md:ml-[58px]"}`}>
           {watchChannel ? (
             <WatchStage channel={watchChannel} parent={embedParent} onCategory={openCategory} onBack={browseHome} />
           ) : (
@@ -2573,7 +2573,7 @@ function WatchStage({
         </div>
       </div>
 
-      <aside className="flex h-[480px] w-full shrink-0 flex-col border-t border-[#2f2f35] bg-[#18181b] xl:sticky xl:top-[50px] xl:h-[calc(100vh-50px)] xl:w-[376px] xl:border-l xl:border-t-0">
+      <aside className="flex h-[480px] w-full shrink-0 flex-col border-t border-[#2f2f35] bg-[#18181b] xl:sticky xl:top-[50px] xl:h-[calc(100vh-50px)] xl:w-[340px] xl:border-l xl:border-t-0">
         {chatUrl ? (
           <iframe
             src={chatUrl}
