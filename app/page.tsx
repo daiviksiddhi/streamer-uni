@@ -911,6 +911,69 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
     };
   }, []);
 
+  useEffect(() => {
+    const twitchUsers = publicChannels
+      .filter((channel) => channel.platform === "twitch")
+      .map((channel) => channel.login);
+    const liveUrl = `/api/twitch/live?users=${encodeURIComponent(twitchUsers.join(","))}`;
+    let ignore = false;
+    let lastRefresh = Date.now();
+
+    const refreshTwitchCounts = async () => {
+      if (document.visibilityState !== "visible" || Date.now() - lastRefresh < 60_000) return;
+      lastRefresh = Date.now();
+
+      try {
+        const response = await fetch(liveUrl);
+        if (!response.ok) return;
+
+        const payload = (await response.json()) as {
+          configured?: boolean;
+          streams?: TwitchStream[];
+        };
+        if (ignore || !payload.configured) return;
+
+        const streams = new Map(
+          (payload.streams ?? []).map((stream) => [stream.user_login.toLowerCase(), stream])
+        );
+
+        setLiveOverrides((current) => {
+          const next = { ...current };
+
+          twitchUsers.forEach((login) => {
+            const stream = streams.get(login);
+            next[login] = {
+              ...current[login],
+              live: Boolean(stream),
+              viewers: stream?.viewer_count ?? 0,
+              category: stream?.game_name || current[login]?.category,
+              title: stream?.title || current[login]?.title,
+              thumbnail:
+                stream?.thumbnail_url?.replace("{width}", "1100").replace("{height}", "620") ||
+                current[login]?.thumbnail
+            };
+          });
+
+          return next;
+        });
+      } catch {
+        // Keep the last known values if a background refresh fails.
+      }
+    };
+
+    const timer = window.setInterval(refreshTwitchCounts, 60_000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") void refreshTwitchCounts();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      ignore = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
   const mergedChannels = useMemo(
     () =>
       publicChannels.map((channel) => {
@@ -2509,7 +2572,7 @@ function WatchStage({
             </div>
 
             <div className="flex shrink-0 flex-col items-start gap-2 lg:items-end">
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 lg:justify-end">
                 <a
                   href={getChannelPageUrl(channel)}
                   target="_blank"
@@ -2519,6 +2582,17 @@ function WatchStage({
                   <HeartIcon className="h-4 w-4" />
                   Follow
                 </a>
+                {channel.platform === "twitch" && (
+                  <a
+                    href={`https://www.twitch.tv/subs/${channel.login}?gift=true`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex h-8 items-center gap-1.5 rounded-[4px] bg-[#2f2f35] px-3 text-[13px] font-semibold text-white hover:bg-[#3b3b44]"
+                  >
+                    <GiftIcon className="h-4 w-4" />
+                    Gift a Sub
+                  </a>
+                )}
                 <a
                   href={
                     channel.platform === "twitch"
@@ -3419,6 +3493,15 @@ function StarIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <svg viewBox="0 0 20 20" fill="currentColor" className={className} aria-hidden="true">
       <path d="m10 1.8 2.5 5.1 5.7.8-4.1 4 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4.1-4 5.7-.8L10 1.8z" />
+    </svg>
+  );
+}
+
+function GiftIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
+      <rect x="3" y="8" width="18" height="4" rx="1" />
+      <path d="M5 12v8h14v-8M12 8v12M12 8H8.5a2.5 2.5 0 1 1 2.5-2.5ZM12 8h3.5A2.5 2.5 0 1 0 13 5.5Z" />
     </svg>
   );
 }
