@@ -1877,6 +1877,66 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
     };
   }, []);
 
+  useEffect(() => {
+    const twitchUsers = channels
+      .filter((channel) => channel.platform === "twitch")
+      .map((channel) => channel.login);
+    const liveUrl = `/api/twitch/live?users=${encodeURIComponent(twitchUsers.join(","))}`;
+    let ignore = false;
+    let lastRefresh = Date.now();
+
+    const refreshLiveChannels = async () => {
+      if (document.visibilityState !== "visible" || Date.now() - lastRefresh < 60_000) return;
+      lastRefresh = Date.now();
+
+      try {
+        const response = await fetch(liveUrl);
+        if (!response.ok) return;
+
+        const payload = (await response.json()) as {
+          configured?: boolean;
+          streams?: TwitchStream[];
+        };
+        if (ignore || !payload.configured) return;
+
+        const streams = new Map(
+          (payload.streams ?? []).map((stream) => [stream.user_login.toLowerCase(), stream])
+        );
+
+        setLiveOverrides((current) => {
+          const next = { ...current };
+
+          twitchUsers.forEach((login) => {
+            const stream = streams.get(login);
+            next[login] = {
+              ...current[login],
+              live: Boolean(stream),
+              viewers: stream?.viewer_count ?? 0,
+              category: stream?.game_name || current[login]?.category,
+              title: stream?.title || current[login]?.title
+            };
+          });
+
+          return next;
+        });
+      } catch {
+        // Keep the last known roster if a background refresh fails.
+      }
+    };
+
+    const timer = window.setInterval(refreshLiveChannels, 60_000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") void refreshLiveChannels();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      ignore = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
   const directory = useMemo(
     () => channels.map((channel) => mergeChannelData(channel, liveOverrides[channel.login])),
     [liveOverrides]
