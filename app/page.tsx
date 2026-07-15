@@ -1,7 +1,15 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactNode
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -735,6 +743,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
   const [watchLogin, setWatchLogin] = useState<string | null>(initialLogin ?? null);
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [mobileDirectoryOpen, setMobileDirectoryOpen] = useState(false);
   const [sideOpen, setSideOpen] = useState(true);
   const [embedParent, setEmbedParent] = useState("");
   const [filter, setFilter] = useState<"All" | "Faculty" | "Students">("All");
@@ -941,12 +950,14 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
       window.open(getChannelPageUrl(channel), "_blank", "noopener");
       return;
     }
+    setMobileDirectoryOpen(false);
     setActiveLogin(login);
     setWatchLogin(login);
     router.push(`/${login}`);
   };
 
   const browseHome = () => {
+    setMobileDirectoryOpen(false);
     setWatchLogin(null);
     setCategoryFilter(null);
     router.push("/");
@@ -1090,7 +1101,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
 
   return (
     <main className="min-h-screen bg-[#0e0e10] text-[#efeff1]">
-      <header className="fixed inset-x-0 top-0 z-40 flex h-[50px] items-center gap-1 border-b border-[#2f2f35] bg-[#18181b] pl-2 pr-3 shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+      <header className={`fixed inset-x-0 top-0 z-40 h-[50px] items-center gap-1 border-b border-[#2f2f35] bg-[#18181b] pl-2 pr-3 shadow-[0_1px_2px_rgba(0,0,0,0.6)] ${watchChannel ? "hidden md:flex" : "flex"}`}>
         <button
           onClick={browseHome}
           className="grid h-10 w-10 shrink-0 place-items-center rounded-[4px] hover:bg-[#26262c]"
@@ -1107,7 +1118,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         <button className="hidden h-8 w-8 items-center justify-center rounded-[4px] hover:bg-[#2f2f35] md:flex" aria-label="More">
           <KebabIcon />
         </button>
-        <div className="relative mx-auto w-full max-w-[540px]">
+        <div className="relative mx-auto w-[62vw] max-w-[300px] md:w-full md:max-w-[540px]">
           <label className="flex h-9 w-full overflow-hidden rounded-[6px] border border-[#67676b] bg-[#18181b] focus-within:border-burgundy focus-within:bg-[#0e0e10]">
             <input
               value={query}
@@ -1127,8 +1138,8 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
               placeholder="Search"
               type="search"
             />
-            <span className="flex w-11 items-center justify-center rounded-r-[6px] bg-[#2f2f35] text-[#dedee3]" aria-hidden="true">
-              <span className="search-glyph" />
+            <span className="flex w-10 items-center justify-center rounded-r-[6px] bg-[#2f2f35] text-[#dedee3] md:w-11" aria-hidden="true">
+              <SearchIcon className="h-5 w-5" />
             </span>
           </label>
           {searchFocused && query.trim().length > 0 && (
@@ -1209,9 +1220,9 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         </a>
       </header>
 
-      <div className="flex pt-[50px]">
+      <div className={`flex ${watchChannel ? "md:pt-[50px]" : "pt-[50px]"}`}>
         <aside
-          className={`fixed bottom-0 left-0 top-[50px] z-30 border-r border-[#2f2f35] bg-[#1f1f23] transition-all duration-200 ${
+          className={`fixed bottom-0 left-0 top-[50px] z-30 hidden border-r border-[#2f2f35] bg-[#1f1f23] transition-all duration-200 md:block ${
             sideOpen ? "w-[286px]" : "w-[58px]"
           }`}
         >
@@ -1292,9 +1303,9 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
           </div>
         </aside>
 
-        <section className={`min-w-0 flex-1 transition-[margin] duration-200 ${sideOpen ? "ml-[286px]" : "ml-[58px]"}`}>
+        <section className={`ml-0 min-w-0 flex-1 transition-[margin] duration-200 ${!watchChannel ? "pb-[58px] md:pb-0" : ""} ${sideOpen ? "md:ml-[286px]" : "md:ml-[58px]"}`}>
           {watchChannel ? (
-            <WatchStage channel={watchChannel} parent={embedParent} onCategory={openCategory} />
+            <WatchStage channel={watchChannel} parent={embedParent} onCategory={openCategory} onBack={browseHome} />
           ) : (
           <div className="mx-auto max-w-[1680px] px-4 py-5 sm:px-6">
             {categoryFilter ? (
@@ -1326,7 +1337,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
                 </span>
               </div>
             )}
-            <section className="relative mb-8 min-h-[292px] overflow-hidden xl:min-h-[390px]">
+            <section className="relative mb-8 hidden min-h-[292px] overflow-hidden md:block xl:min-h-[390px]">
               <button
                 onClick={() => moveFeatured(-1)}
                 className="absolute left-0 top-1/2 z-30 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-[4px] hover:bg-[#2f2f35] lg:grid"
@@ -1413,6 +1424,16 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
             </section>
 
             <ChannelShelf
+              className="md:hidden"
+              title="Live on campus"
+              accent="who's streaming right now"
+              channels={[...liveChannels].sort((a, b) => b.viewers - a.viewers).slice(0, 8)}
+              activeLogin={activeLogin}
+              onSelect={openChannel}
+            />
+
+            <ChannelShelf
+              className="hidden md:block"
               title="Live on campus"
               accent="who's streaming right now"
               channels={[
@@ -1468,9 +1489,38 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
             )}
           </div>
           )}
-          <Footer />
+          <div className={watchChannel ? "hidden md:block" : ""}>
+            <Footer />
+          </div>
         </section>
       </div>
+
+      {!watchChannel && (
+        <>
+          <MobileDirectory
+            open={mobileDirectoryOpen}
+            filter={filter}
+            liveOnly={liveOnly}
+            sections={sidebarSections}
+            channels={sidebarChannels}
+            categories={categoryStats.filter((category) => !excludedCategories.has(category.name))}
+            art={gameArt}
+            activeLogin={activeLogin}
+            onFilter={setFilter}
+            onLiveOnly={() => setLiveOnly((current) => !current)}
+            onSelectChannel={openChannel}
+            onSelectCategory={(name) => {
+              setMobileDirectoryOpen(false);
+              openCategory(name);
+            }}
+          />
+          <MobileBottomNav
+            directoryOpen={mobileDirectoryOpen}
+            onHome={browseHome}
+            onDirectory={() => setMobileDirectoryOpen((current) => !current)}
+          />
+        </>
+      )}
     </main>
   );
 }
@@ -1547,6 +1597,147 @@ function Footer() {
         </div>
       </div>
     </footer>
+  );
+}
+
+function MobileBottomNav({
+  directoryOpen,
+  onHome,
+  onDirectory
+}: {
+  directoryOpen: boolean;
+  onHome: () => void;
+  onDirectory: () => void;
+}) {
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-50 grid h-[58px] grid-cols-2 border-t border-[#34343b] bg-[#18181b] md:hidden" aria-label="Mobile navigation">
+      <button
+        onClick={onHome}
+        className={`flex flex-col items-center justify-center gap-0.5 border-t-2 text-[11px] font-semibold ${
+          !directoryOpen ? "border-burgundy text-white" : "border-transparent text-[#adadb8]"
+        }`}
+        aria-current={!directoryOpen ? "page" : undefined}
+      >
+        <HomeIcon className="h-5 w-5" />
+        Home
+      </button>
+      <button
+        onClick={onDirectory}
+        className={`flex flex-col items-center justify-center gap-0.5 border-t-2 text-[11px] font-semibold ${
+          directoryOpen ? "border-burgundy text-white" : "border-transparent text-[#adadb8]"
+        }`}
+        aria-expanded={directoryOpen}
+      >
+        <DirectoryIcon className="h-5 w-5" />
+        Directory
+      </button>
+    </nav>
+  );
+}
+
+function MobileDirectory({
+  open,
+  filter,
+  liveOnly,
+  sections,
+  channels: directoryChannels,
+  categories,
+  art,
+  activeLogin,
+  onFilter,
+  onLiveOnly,
+  onSelectChannel,
+  onSelectCategory
+}: {
+  open: boolean;
+  filter: "All" | "Faculty" | "Students";
+  liveOnly: boolean;
+  sections: string[];
+  channels: Channel[];
+  categories: CategoryStat[];
+  art: Record<string, string>;
+  activeLogin: string;
+  onFilter: (filter: "All" | "Faculty" | "Students") => void;
+  onLiveOnly: () => void;
+  onSelectChannel: (login: string) => void;
+  onSelectCategory: (name: string) => void;
+}) {
+  if (!open) return null;
+
+  return (
+    <section className="fixed inset-x-0 bottom-[58px] top-[50px] z-40 overflow-y-auto bg-[#1f1f23] md:hidden" aria-label="Campus directory">
+      <div className="sticky top-0 z-10 border-b border-[#34343b] bg-[#1f1f23] px-3 pb-3 pt-3">
+        <div className="flex items-center justify-between">
+          <h1 className="text-[20px] font-bold text-white">Campus directory</h1>
+          <span className="text-[12px] text-[#adadb8]">{directoryChannels.length} channels</span>
+        </div>
+        <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
+          <div className="grid grid-cols-3 overflow-hidden rounded-[4px] bg-[#111114] p-1">
+            {(["All", "Faculty", "Students"] as const).map((item) => (
+              <button
+                key={item}
+                onClick={() => onFilter(item)}
+                className={`h-8 rounded-[3px] text-[12px] font-semibold ${
+                  filter === item ? "bg-burgundy text-white" : "text-[#adadb8] hover:text-white"
+                }`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={onLiveOnly}
+            className={`h-10 rounded-[4px] px-3 text-[12px] font-semibold ${
+              liveOnly ? "su-primary text-white" : "bg-[#111114] text-[#dedee3]"
+            }`}
+            aria-pressed={liveOnly}
+          >
+            Live now
+          </button>
+        </div>
+      </div>
+
+      {filter === "All" && !liveOnly && categories.length > 0 && (
+        <div className="border-b border-[#34343b] py-3">
+          <h2 className="px-3 pb-2 text-[13px] font-bold uppercase text-[#adadb8]">Categories</h2>
+          <div className="flex gap-2 overflow-x-auto px-3 pb-1 [scrollbar-width:none]">
+            {categories.map((category) => (
+              <button
+                key={category.name}
+                onClick={() => onSelectCategory(category.name)}
+                className="flex w-[118px] shrink-0 items-center gap-2 rounded-[4px] bg-[#18181b] p-2 text-left hover:bg-[#26262c]"
+              >
+                <span className="h-12 w-9 shrink-0 overflow-hidden rounded-[2px]">
+                  <CategoryArt name={category.name} src={art[category.name]} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-[12px] font-semibold text-white">{category.name}</span>
+                  <span className="block text-[11px] text-[#adadb8]">
+                    {category.liveCount > 0 ? `${category.liveCount} live` : `${category.total} channels`}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="py-2">
+        {sections.map((section) => (
+          <SidebarSection
+            key={section}
+            collapsed={false}
+            title={getSectionTitle(section)}
+            channels={directoryChannels.filter((channel) => channel.campusRole === section)}
+            activeLogin={activeLogin}
+            onSelect={onSelectChannel}
+          />
+        ))}
+        {sections.length === 0 && (
+          <p className="px-4 py-12 text-center text-[13px] text-[#adadb8]">No campus channels match these filters.</p>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -2128,17 +2319,108 @@ function StreamThumbnail({ channel, className = "" }: { channel: Channel; classN
 function WatchStage({
   channel,
   parent,
-  onCategory
+  onCategory,
+  onBack
 }: {
   channel: Channel;
   parent: string;
   onCategory: (name: string) => void;
+  onBack: () => void;
 }) {
   const playerUrl = parent ? getPlayerUrl(channel, parent) : null;
   const chatUrl = parent ? getChatEmbedUrl(channel, parent) : null;
 
   return (
-    <div className="flex flex-col xl:flex-row">
+    <>
+      <div className="flex h-svh min-h-[520px] flex-col bg-[#18181b] md:hidden">
+        <div className="flex h-14 shrink-0 items-center gap-2 border-b border-[#2f2f35] px-2.5">
+          <button
+            onClick={onBack}
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-[4px] text-white hover:bg-[#2f2f35]"
+            aria-label="Back to Streamer University home"
+          >
+            <ChevronLeftIcon className="h-6 w-6" />
+          </button>
+          <Avatar channel={channel} size="sm" />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <h1 className="truncate text-[16px] font-semibold text-white">{channel.name}</h1>
+              {channel.verified && <VerifiedIcon className="h-4 w-4 shrink-0 text-gold" />}
+              <PlatformBadge platform={channel.platform} />
+            </div>
+            <div className="flex items-center gap-2 text-[12px] text-[#adadb8]">
+              {channel.live ? (
+                <>
+                  <span className="flex items-center gap-1">
+                    <PeopleIcon className="h-3.5 w-3.5" />
+                    {formatViewers(channel.viewers)}
+                  </span>
+                  <span className="h-2 w-2 rounded-full bg-live" />
+                  <span className="truncate">Live</span>
+                </>
+              ) : (
+                <span>Offline</span>
+              )}
+            </div>
+          </div>
+          <a
+            href={getChannelPageUrl(channel)}
+            target="_blank"
+            rel="noreferrer"
+            className="su-primary flex h-8 shrink-0 items-center rounded-[4px] px-3 text-[12px] font-semibold text-white"
+          >
+            Follow
+          </a>
+        </div>
+
+        <div className="relative aspect-video w-full shrink-0 bg-black">
+          {playerUrl ? (
+            <iframe
+              src={playerUrl}
+              title={`${channel.name} ${platformLabels[channel.platform]} stream`}
+              allowFullScreen
+              allow="autoplay; fullscreen; picture-in-picture"
+              className="absolute inset-0 h-full w-full border-0"
+            />
+          ) : (
+            <StreamThumbnail channel={channel} />
+          )}
+        </div>
+
+        <section className="flex min-h-0 flex-1 flex-col border-t border-[#2f2f35] bg-[#18181b]">
+          <div className="flex h-10 shrink-0 items-center justify-between border-b border-[#2f2f35] px-3">
+            <h2 className="text-[14px] font-semibold text-white">Stream Chat</h2>
+            <span className="truncate text-[12px] text-[#adadb8]">{channel.category}</span>
+          </div>
+          {chatUrl ? (
+            <iframe
+              src={chatUrl}
+              title={`${channel.name} ${platformLabels[channel.platform]} chat`}
+              className="min-h-0 w-full flex-1 border-0"
+            />
+          ) : parent ? (
+            <div className="grid flex-1 place-items-center px-6 text-center">
+              <div>
+                <p className="text-[13px] text-[#adadb8]">
+                  Chat for this channel lives on {platformLabels[channel.platform]}.
+                </p>
+                <a
+                  href={getChannelPageUrl(channel)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="su-primary mt-3 inline-flex h-8 items-center rounded-[4px] px-3 text-[13px] font-semibold text-white"
+                >
+                  Open chat
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="grid flex-1 place-items-center text-[13px] text-[#adadb8]">Chat loading</div>
+          )}
+        </section>
+      </div>
+
+    <div className="hidden flex-col md:flex xl:flex-row">
       <div className="min-w-0 flex-1">
         <div className="relative aspect-video max-h-[calc(100svh-170px)] w-full bg-black">
           {playerUrl ? (
@@ -2289,6 +2571,7 @@ function WatchStage({
         )}
       </aside>
     </div>
+    </>
   );
 }
 
@@ -2309,7 +2592,8 @@ function ChannelShelf({
   channels: shelfChannels,
   activeLogin,
   onSelect,
-  initialCount
+  initialCount,
+  className = ""
 }: {
   id?: string;
   title: string;
@@ -2318,14 +2602,30 @@ function ChannelShelf({
   activeLogin: string;
   onSelect: (login: string) => void;
   initialCount?: number;
+  className?: string;
 }) {
   // Untruncated shelves must not freeze a count at mount time — channel lists
   // start empty and fill in once the Twitch data loads.
   const [visibleCount, setVisibleCount] = useState(initialCount ?? Number.POSITIVE_INFINITY);
+  const shelfRowRef = useRef<HTMLDivElement>(null);
+  const pendingScrollLeft = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (pendingScrollLeft.current === null || !shelfRowRef.current) return;
+
+    shelfRowRef.current.scrollLeft = pendingScrollLeft.current;
+    pendingScrollLeft.current = null;
+  }, [visibleCount]);
+
+  const revealMoreMobile = (event: MouseEvent<HTMLButtonElement>) => {
+    pendingScrollLeft.current = shelfRowRef.current?.scrollLeft ?? null;
+    event.currentTarget.blur();
+    setVisibleCount((current) => Math.min(current + (initialCount ?? 0), shelfChannels.length));
+  };
 
   if (!shelfChannels.length) {
     return (
-      <section id={id} className="mb-8 scroll-mt-[70px] border-t border-[#2f2f35] pt-6">
+      <section id={id} className={`mb-8 scroll-mt-[70px] border-t border-[#2f2f35] pt-6 ${className}`}>
         <SectionHeading title={title} accent={accent} />
         <div className="mt-4 bg-[#18181b] px-4 py-8 text-center text-[#adadb8]">No channels match this search.</div>
       </section>
@@ -2333,11 +2633,11 @@ function ChannelShelf({
   }
 
   return (
-    <section id={id} className="mb-8 scroll-mt-[70px]">
+    <section id={id} className={`mb-8 scroll-mt-[70px] ${className}`}>
       <SectionHeading title={title} accent={accent} className="mb-4" />
-      <div className="grid gap-x-3 gap-y-7 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <div ref={shelfRowRef} className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [overflow-anchor:none] [scrollbar-width:none] sm:-mx-6 sm:px-6 md:mx-0 md:grid md:snap-none md:gap-x-3 md:gap-y-7 md:overflow-visible md:px-0 md:pb-0 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {shelfChannels.slice(0, visibleCount).map((channel) => (
-          <button key={channel.login} onClick={() => onSelect(channel.login)} className="group min-w-0 text-left">
+          <button key={channel.login} onClick={() => onSelect(channel.login)} className="group w-[78vw] max-w-[340px] shrink-0 snap-start text-left md:w-auto md:max-w-none md:min-w-0">
             <div className="relative">
               <div className="absolute inset-0 bg-burgundy" aria-hidden="true" />
               <div
@@ -2387,9 +2687,21 @@ function ChannelShelf({
             </div>
           </button>
         ))}
+        {initialCount !== undefined && visibleCount < shelfChannels.length && (
+          <button
+            onClick={revealMoreMobile}
+            className="flex min-h-[220px] w-[42vw] max-w-[170px] shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-[4px] border border-[#34343b] bg-[#18181b] px-4 text-center hover:border-burgundy hover:bg-[#26262c] md:hidden"
+          >
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-burgundy text-white">
+              <ChevronRightIcon className="h-5 w-5" />
+            </span>
+            <span className="text-[13px] font-semibold text-white">Show more</span>
+            <span className="text-[11px] text-[#adadb8]">{shelfChannels.length - visibleCount} remaining</span>
+          </button>
+        )}
       </div>
       {initialCount !== undefined && shelfChannels.length > initialCount && (
-        <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-4 text-center">
+        <div className="mt-5 hidden grid-cols-[1fr_auto_1fr] items-center gap-4 text-center md:grid">
           <span className="h-px bg-[#2f2f35]" />
           {visibleCount < shelfChannels.length ? (
             <button
@@ -2436,14 +2748,14 @@ function CatchUpShelf({ clips, channels }: { clips: TwitchClip[]; channels: Chan
   return (
     <section className="mb-8">
       <SectionHeading title="Trending" accent="in the dorms" className="mb-4" />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:-mx-6 sm:px-6 md:mx-0 md:grid md:snap-none md:grid-cols-2 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-4">
         {clips.slice(0, 4).map((clip) => {
           const channel = channelsByLogin.get(clip.broadcaster_login.toLowerCase());
           const name = channel?.name || clip.broadcaster_name;
           const category = clip.game_name || channel?.category || "Streamer University";
 
           return (
-            <article key={clip.id} className="min-w-0">
+            <article key={clip.id} className="w-[62vw] max-w-[270px] shrink-0 snap-start md:w-auto md:max-w-none md:min-w-0">
               <a
                 href={clip.url}
                 target="_blank"
@@ -2522,9 +2834,9 @@ function CategoryShelf({
   return (
     <section className="mb-8">
       <SectionHeading title="Course catalog" accent="what campus is streaming" className="mb-4" />
-      <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8">
+      <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:-mx-6 sm:px-6 md:mx-0 md:grid md:snap-none md:grid-cols-4 md:gap-x-3 md:gap-y-6 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-6 2xl:grid-cols-8">
         {categories.map((category) => (
-          <button key={category.name} onClick={() => onSelect(category.name)} className="group min-w-0 text-left">
+          <button key={category.name} onClick={() => onSelect(category.name)} className="group w-[34vw] max-w-[150px] shrink-0 snap-start text-left md:w-auto md:max-w-none md:min-w-0">
             <div className="relative">
               <div className="absolute inset-0 bg-burgundy" aria-hidden="true" />
               <div className="relative aspect-[285/380] overflow-hidden bg-[#26262c] transition-transform duration-100 ease-out group-hover:-translate-y-1.5 group-hover:translate-x-1.5">
@@ -2691,6 +3003,36 @@ function ChevronDownIcon({ className }: { className?: string }) {
   return (
     <IconBase className={className}>
       <path d="m5 7.5 5 5 5-5" />
+    </IconBase>
+  );
+}
+
+function SearchIcon({ className }: { className?: string }) {
+  return (
+    <IconBase className={className}>
+      <circle cx="8.5" cy="8.5" r="5" />
+      <path d="m12.25 12.25 4 4" />
+    </IconBase>
+  );
+}
+
+function HomeIcon({ className }: { className?: string }) {
+  return (
+    <IconBase className={className}>
+      <path d="M2.5 9.5 10 3l7.5 6.5" />
+      <path d="M4.5 8.3V17h11V8.3" />
+      <path d="M8 17v-5h4v5" />
+    </IconBase>
+  );
+}
+
+function DirectoryIcon({ className }: { className?: string }) {
+  return (
+    <IconBase className={className}>
+      <rect x="3" y="3" width="5" height="5" rx="0.5" />
+      <rect x="12" y="3" width="5" height="5" rx="0.5" />
+      <rect x="3" y="12" width="5" height="5" rx="0.5" />
+      <rect x="12" y="12" width="5" height="5" rx="0.5" />
     </IconBase>
   );
 }
