@@ -34,6 +34,7 @@ type Channel = {
   platform: Platform;
   platformHandle?: string;
   youtubeVideoId?: string;
+  multiviewOnly?: boolean;
 };
 
 type SeedChannel = {
@@ -559,8 +560,24 @@ const channels: Channel[] = [
       platform: platformInfo?.platform ?? ("twitch" as const),
       platformHandle: platformInfo?.handle
     };
-  })
+  }),
+  {
+    login: "feelssunnyman",
+    name: "FeelsSunnyMan",
+    role: "Faculty",
+    campusRole: "Moderator",
+    category: "Just Chatting",
+    title: "Campus stream commentary",
+    viewers: 0,
+    live: false,
+    tags: ["Moderator", "Commentary"],
+    accent: "#B20B32",
+    platform: "twitch",
+    multiviewOnly: true
+  }
 ];
+
+const publicChannels = channels.filter((channel) => !channel.multiviewOnly);
 
 // Twitch's public box art CDN — stable category ids, no auth needed
 const categoryBoxArt: Record<string, string> = {
@@ -715,7 +732,7 @@ const getChatEmbedUrl = (channel: Channel, parent: string) => {
 export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string }) {
   const router = useRouter();
   const initialLogin = initialWatchLogin?.toLowerCase();
-  const [activeLogin, setActiveLogin] = useState(initialLogin ?? channels[0].login);
+  const [activeLogin, setActiveLogin] = useState(initialLogin ?? publicChannels[0].login);
   const [watchLogin, setWatchLogin] = useState<string | null>(initialLogin ?? null);
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
@@ -752,7 +769,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
     if (isDirectoryLoading) return;
 
     let ignore = false;
-    const users = channels
+    const users = publicChannels
       .filter((channel) => channel.platform === "twitch")
       .map((channel) => channel.login);
 
@@ -776,13 +793,13 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
 
   useEffect(() => {
     const userChunks = chunkItems(
-      channels.filter((channel) => channel.platform === "twitch").map((channel) => channel.login),
+      publicChannels.filter((channel) => channel.platform === "twitch").map((channel) => channel.login),
       100
     );
-    const kickSlugs = channels
+    const kickSlugs = publicChannels
       .filter((channel) => channel.platform === "kick" && channel.platformHandle)
       .map((channel) => channel.platformHandle as string);
-    const youtubeHandles = channels
+    const youtubeHandles = publicChannels
       .filter((channel) => channel.platform === "youtube" && channel.platformHandle)
       .map((channel) => channel.platformHandle as string);
     let ignore = false;
@@ -813,7 +830,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
     Promise.all([twitchRequests, kickRequest, youtubeRequest])
       .then(([payloads, kickPayload, youtubePayload]) => {
         if (ignore || payloads.some((payload) => !payload.configured)) return;
-        const nextOverrides = channels.reduce<Record<string, Partial<Channel>>>((acc, channel) => {
+        const nextOverrides = publicChannels.reduce<Record<string, Partial<Channel>>>((acc, channel) => {
           acc[channel.login] = {
             live: false,
             viewers: 0
@@ -858,7 +875,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         });
 
         (kickPayload?.channels ?? []).forEach((kickChannel) => {
-          const channel = channels.find(
+          const channel = publicChannels.find(
             (candidate) =>
               candidate.platform === "kick" &&
               candidate.platformHandle?.toLowerCase() === kickChannel.slug?.toLowerCase()
@@ -875,7 +892,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         });
 
         (youtubePayload?.channels ?? []).forEach((youtubeChannel) => {
-          const channel = channels.find(
+          const channel = publicChannels.find(
             (candidate) =>
               candidate.platform === "youtube" &&
               candidate.platformHandle?.toLowerCase() === youtubeChannel.handle?.toLowerCase()
@@ -908,7 +925,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
 
   const mergedChannels = useMemo(
     () =>
-      channels.map((channel) => {
+      publicChannels.map((channel) => {
         const merged = mergeChannelData(channel, liveOverrides[channel.login]);
 
         return {
@@ -1725,6 +1742,7 @@ export default function Home() {
 }
 
 type MultiviewLayout = "Focus" | "Grid" | "Wide";
+const maxMultiviewChannels = 6;
 
 export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] }) {
   const router = useRouter();
@@ -1738,7 +1756,7 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
       .filter((login) =>
         channels.some((channel) => channel.login === login && channel.platform === "twitch")
       )
-      .slice(0, 4)
+      .slice(0, maxMultiviewChannels)
   );
   const [activeChatLogin, setActiveChatLogin] = useState(() => initialLogins[0]?.toLowerCase() ?? "");
   const [audioLogin, setAudioLogin] = useState<string | null>(null);
@@ -1827,9 +1845,14 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
     .filter((channel): channel is Channel => Boolean(channel?.live));
   const activeChatChannel =
     selectedChannels.find((channel) => channel.login === activeChatLogin) ?? selectedChannels[0] ?? null;
-  const usesSharedChat = layout === "Focus" || (layout === "Grid" && selectedChannels.length === 4);
+  const channelCount = selectedChannels.length;
+  const usesSharedChat =
+    (layout === "Focus" && channelCount !== 5) || (layout === "Grid" && channelCount === 4);
   const usesInlineChats = layout === "Grid" && selectedChannels.length <= 2;
-  const usesGridChatTile = layout === "Grid" && selectedChannels.length === 3;
+  const usesGridChatTile =
+    (layout === "Grid" && channelCount === 3) || (channelCount === 5 && layout !== "Wide");
+  const availableLayouts: MultiviewLayout[] =
+    channelCount === 6 ? ["Focus", "Wide"] : ["Focus", "Grid", "Wide"];
 
   const updateSelection = (nextLogins: string[]) => {
     setSelectedLogins(nextLogins);
@@ -1844,7 +1867,10 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
       updateSelection(selectedLogins.filter((current) => current !== login));
       return;
     }
-    if (selectedLogins.length >= 4) return;
+    if (selectedLogins.length >= maxMultiviewChannels) return;
+    if (selectedLogins.length === maxMultiviewChannels - 1 && layout === "Grid") {
+      setLayout("Focus");
+    }
     updateSelection([...selectedLogins, login]);
   };
 
@@ -1861,7 +1887,7 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
           <MultiviewIcon className="h-4 w-4 text-gold" />
           <span className="text-[15px] font-semibold text-white">Lecture Hall</span>
           <span className="rounded-full bg-[#2f2f35] px-2 py-0.5 text-[12px] font-semibold text-[#dedee3]">
-            {selectedChannels.length}/4
+            {selectedChannels.length}/{maxMultiviewChannels}
           </span>
         </div>
         <div className="relative">
@@ -1880,7 +1906,7 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
           {isPickerOpen && (
             <>
               <div className="absolute right-full top-[calc(100%+8px)] z-50 flex w-[68px] flex-col gap-1 border border-r-0 border-[#34343b] bg-[#18181b] p-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.55)]">
-                {(["Focus", "Grid", "Wide"] as const).map((option) => (
+                {availableLayouts.map((option) => (
                   <button
                     key={option}
                     onClick={() => setLayout(option)}
@@ -1905,7 +1931,7 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
                   ) : (
                     liveChannels.map((channel) => {
                       const isSelected = selectedLogins.includes(channel.login);
-                      const atLimit = selectedLogins.length >= 4 && !isSelected;
+                      const atLimit = selectedLogins.length >= maxMultiviewChannels && !isSelected;
                       const selectionIndex = selectedLogins.indexOf(channel.login);
 
                       return (
@@ -2063,30 +2089,68 @@ function MultiPlayerGrid({
   onRemove: (login: string) => void;
   chatTile?: ReactNode;
 }) {
+  const channelCount = channels.length;
   const gridClass =
-    layout === "Grid"
-      ? "grid-cols-1 sm:grid-cols-2"
-      : layout === "Wide"
-        ? channels.length <= 2
-          ? "grid-cols-1"
-          : channels.length === 3
-            ? "grid-cols-1 lg:grid-cols-2 lg:grid-rows-2"
-            : "grid-cols-1 sm:grid-cols-2"
-          : channels.length <= 2
-          ? "grid-cols-1"
-          : channels.length === 4
-            ? "grid-cols-1 lg:grid-cols-3 lg:grid-rows-2"
-            : "grid-cols-1 lg:grid-cols-2 lg:grid-rows-2";
+    channelCount === 6
+      ? layout === "Focus"
+        ? "grid-cols-1 lg:grid-cols-2 lg:grid-rows-3"
+        : "grid-cols-1 lg:grid-cols-3 lg:grid-rows-2"
+      : channelCount === 5
+        ? layout === "Wide"
+          ? "grid-cols-1 lg:grid-cols-6 lg:grid-rows-2"
+          : "grid-cols-1 lg:grid-cols-3 lg:grid-rows-2"
+        : layout === "Grid"
+          ? "grid-cols-1 sm:grid-cols-2"
+          : layout === "Wide"
+            ? channelCount <= 2
+              ? "grid-cols-1"
+              : channelCount === 3
+                ? "grid-cols-1 lg:grid-cols-2 lg:grid-rows-2"
+                : "grid-cols-1 sm:grid-cols-2"
+            : channelCount <= 2
+              ? "grid-cols-1"
+              : channelCount === 4
+                ? "grid-cols-1 lg:grid-cols-3 lg:grid-rows-2"
+                : "grid-cols-1 lg:grid-cols-2 lg:grid-rows-2";
+
+  const fiveChannelFocusPositions = [
+    "lg:col-start-1 lg:row-start-1",
+    "lg:col-start-2 lg:row-start-1",
+    "lg:col-start-1 lg:row-start-2",
+    "lg:col-start-2 lg:row-start-2",
+    "lg:col-start-3 lg:row-start-2"
+  ];
+  const fiveChannelGridPositions = [
+    "lg:col-start-1 lg:row-start-1",
+    "lg:col-start-2 lg:row-start-1",
+    "lg:col-start-3 lg:row-start-1",
+    "lg:col-start-1 lg:row-start-2",
+    "lg:col-start-3 lg:row-start-2"
+  ];
+  const chatTileClass =
+    channelCount === 5
+      ? layout === "Focus"
+        ? "lg:col-start-3 lg:row-start-1"
+        : "lg:col-start-2 lg:row-start-2"
+      : "";
 
   return (
     <div className={`grid min-h-[440px] gap-2 xl:h-full xl:min-h-0 ${gridClass}`}>
       {channels.map((channel, index) => {
         const tileClass =
-          (layout === "Focus" || layout === "Wide") && channels.length === 3 && index === 0
-            ? "lg:col-span-2"
-            : layout === "Focus" && channels.length === 4 && index === 0
-              ? "lg:col-span-3"
-              : "";
+          channelCount === 5
+            ? layout === "Wide"
+              ? index < 2
+                ? "lg:col-span-3"
+                : "lg:col-span-2"
+              : layout === "Focus"
+                ? fiveChannelFocusPositions[index]
+                : fiveChannelGridPositions[index]
+            : (layout === "Focus" || layout === "Wide") && channelCount === 3 && index === 0
+              ? "lg:col-span-2"
+              : layout === "Focus" && channelCount === 4 && index === 0
+                ? "lg:col-span-3"
+                : "";
         const isActiveChat = activeChatLogin === channel.login;
         const isActiveAudio = audioLogin === channel.login;
 
@@ -2135,7 +2199,11 @@ function MultiPlayerGrid({
           </div>
         );
       })}
-      {chatTile && <div className="relative min-h-[300px] overflow-hidden bg-[#18181b] xl:min-h-0">{chatTile}</div>}
+      {chatTile && (
+        <div className={`relative min-h-[300px] overflow-hidden bg-[#18181b] xl:min-h-0 ${chatTileClass}`}>
+          {chatTile}
+        </div>
+      )}
     </div>
   );
 }
@@ -3147,7 +3215,7 @@ function MultiviewLayoutPreview({
   channelCount: number;
   active: boolean;
 }) {
-  const count = Math.max(1, Math.min(channelCount, 4));
+  const count = Math.max(1, Math.min(channelCount, maxMultiviewChannels));
   const playerClass = active ? "bg-burgundy text-white" : "bg-wine text-gold-soft";
   const chatClass = active ? "bg-gold text-[#21150a]" : "bg-[#5A431E] text-gold-soft";
   const player = (number: number, className = "") => (
@@ -3158,6 +3226,35 @@ function MultiviewLayoutPreview({
   );
 
   if (layout === "Focus") {
+    if (count === 6) {
+      return (
+        <div className="grid h-full w-full grid-cols-[1fr_10px] gap-[2px]">
+          <span className="grid min-h-0 grid-cols-2 grid-rows-3 gap-[2px]">
+            {player(1)}
+            {player(2)}
+            {player(3)}
+            {player(4)}
+            {player(5)}
+            {player(6)}
+          </span>
+          {chat()}
+        </div>
+      );
+    }
+
+    if (count === 5) {
+      return (
+        <div className="grid h-full w-full grid-cols-3 grid-rows-2 gap-[2px]">
+          {player(1)}
+          {player(2)}
+          {chat()}
+          {player(3)}
+          {player(4)}
+          {player(5)}
+        </div>
+      );
+    }
+
     if (count === 4) {
       return (
         <div className="grid h-full w-full grid-cols-[1fr_1fr_1fr_10px] grid-rows-2 gap-[2px]">
@@ -3212,6 +3309,19 @@ function MultiviewLayoutPreview({
       );
     }
 
+    if (count === 5) {
+      return (
+        <div className="grid h-full w-full grid-cols-3 grid-rows-2 gap-[2px]">
+          {player(1)}
+          {player(2)}
+          {player(3)}
+          {player(4)}
+          {chat()}
+          {player(5)}
+        </div>
+      );
+    }
+
     return (
       <div className="grid h-full w-full grid-cols-[1fr_1fr_10px] grid-rows-2 gap-[2px]">
         {player(1)}
@@ -3236,6 +3346,31 @@ function MultiviewLayoutPreview({
       <div className="grid h-full w-full grid-rows-2 gap-[2px]">
         {player(1)}
         {player(2)}
+      </div>
+    );
+  }
+
+  if (count === 6) {
+    return (
+      <div className="grid h-full w-full grid-cols-3 grid-rows-2 gap-[2px]">
+        {player(1)}
+        {player(2)}
+        {player(3)}
+        {player(4)}
+        {player(5)}
+        {player(6)}
+      </div>
+    );
+  }
+
+  if (count === 5) {
+    return (
+      <div className="grid h-full w-full grid-cols-6 grid-rows-2 gap-[2px]">
+        {player(1, "col-span-3")}
+        {player(2, "col-span-3")}
+        {player(3, "col-span-2")}
+        {player(4, "col-span-2")}
+        {player(5, "col-span-2")}
       </div>
     );
   }
