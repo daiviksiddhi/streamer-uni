@@ -763,14 +763,16 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
       .filter((channel) => channel.platform === "twitch")
       .map((channel) => channel.login);
 
-    fetch(`/api/twitch/clips?ranking=top-24h-live40-4h&users=${encodeURIComponent(users.join(","))}`)
+    fetch(`/api/twitch/clips?ranking=top-24h-all-4h&users=${encodeURIComponent(users.join(","))}`)
       .then((response) =>
         response.json() as Promise<{
           clips?: TwitchClip[];
+          degraded?: boolean;
+          error?: string;
         }>
       )
       .then((payload) => {
-        if (!ignore) {
+        if (!ignore && !payload.degraded && !payload.error) {
           const rankedClips = [...(payload.clips ?? [])].sort(
             (a, b) =>
               b.view_count - a.view_count ||
@@ -779,9 +781,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
           setPopularClips(rankedClips);
         }
       })
-      .catch(() => {
-        if (!ignore) setPopularClips([]);
-      });
+      .catch(() => undefined);
 
     return () => {
       ignore = true;
