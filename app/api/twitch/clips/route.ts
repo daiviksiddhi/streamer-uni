@@ -108,7 +108,7 @@ export async function GET(request: Request) {
     // Keep the upstream URLs stable within the same cache window. A timestamp based
     // on the exact request time defeats Next's fetch cache on every regeneration.
     const tenMinuteBucket = Math.floor(Date.now() / (10 * 60 * 1000)) * 10 * 60 * 1000;
-    const startedAt = new Date(tenMinuteBucket - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const startedAt = new Date(tenMinuteBucket - 24 * 60 * 60 * 1000).toISOString();
     const endedAt = new Date(tenMinuteBucket).toISOString();
     const users = userPayloads.flat();
     const clipGroups = await mapWithConcurrency<TwitchUser, TwitchClipGroup>(users, 8, async (user) => {

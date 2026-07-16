@@ -763,7 +763,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
       .filter((channel) => channel.platform === "twitch")
       .map((channel) => channel.login);
 
-    fetch(`/api/twitch/clips?ranking=top&users=${encodeURIComponent(users.join(","))}`)
+    fetch(`/api/twitch/clips?ranking=top-24h&users=${encodeURIComponent(users.join(","))}`)
       .then((response) =>
         response.json() as Promise<{
           clips?: TwitchClip[];
