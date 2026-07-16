@@ -1469,27 +1469,29 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
 
             <ChannelShelf
               className="md:hidden"
-              title="Live on campus"
-              accent="who's streaming right now"
-              channels={[...liveChannels].sort((a, b) => b.viewers - a.viewers).slice(0, 8)}
+              title="Popular on campus"
+              accent="the hottest streams right now"
+              channels={[...liveChannels].sort((a, b) => b.viewers - a.viewers).slice(0, 15)}
               activeLogin={activeLogin}
               onSelect={openChannel}
+              initialCount={6}
               emptyMessage="No channels are live right now. Check back at 3 PM ET when Streamer University starts."
             />
 
             <ChannelShelf
               className="hidden md:block"
-              title="Live on campus"
-              accent="who's streaming right now"
+              title="Popular on campus"
+              accent="the hottest streams right now"
               channels={[
                 ...(liveChannels.length > 1
                   ? liveChannels.filter((channel) => channel.login !== featuredChannel.login)
                   : liveChannels)
               ]
                 .sort((a, b) => b.viewers - a.viewers)
-                .slice(0, 8)}
+                .slice(0, 15)}
               activeLogin={activeLogin}
               onSelect={openChannel}
+              initialCount={6}
               emptyMessage="No channels are live right now. Check back at 3 PM ET when Streamer University starts."
             />
 
@@ -1503,9 +1505,10 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
               channels={[...liveChannels]
                 .filter((channel) => channel.viewers > 0)
                 .sort((a, b) => a.viewers - b.viewers)
-                .slice(0, 8)}
+                .slice(0, 15)}
               activeLogin={activeLogin}
               onSelect={openChannel}
+              initialCount={6}
               emptyMessage="No channels are live right now. Check back at 3 PM ET when Streamer University starts."
             />
 
@@ -2743,7 +2746,7 @@ function WatchStage({
 
 function SectionHeading({ title, accent, className = "" }: { title: string; accent: string; className?: string }) {
   return (
-    <h2 className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-[20px] font-bold ${className}`}>
+    <h2 className={`flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[18px] font-bold leading-tight sm:gap-x-2 sm:text-[20px] ${className}`}>
       <span className="h-4 w-[3px] shrink-0 rounded-full bg-gold" aria-hidden="true" />
       <span className="text-white">{title}</span>
       <span className="text-[#dedee3]">{accent}</span>
@@ -2777,16 +2780,28 @@ function ChannelShelf({
   const [visibleCount, setVisibleCount] = useState(initialCount ?? Number.POSITIVE_INFINITY);
   const shelfRowRef = useRef<HTMLDivElement>(null);
   const pendingScrollLeft = useRef<number | null>(null);
+  const pendingPageScrollTop = useRef<number | null>(null);
 
   useLayoutEffect(() => {
-    if (pendingScrollLeft.current === null || !shelfRowRef.current) return;
+    if (pendingScrollLeft.current !== null && shelfRowRef.current) {
+      shelfRowRef.current.scrollLeft = pendingScrollLeft.current;
+      pendingScrollLeft.current = null;
+    }
 
-    shelfRowRef.current.scrollLeft = pendingScrollLeft.current;
-    pendingScrollLeft.current = null;
+    if (pendingPageScrollTop.current !== null) {
+      window.scrollTo(0, pendingPageScrollTop.current);
+      pendingPageScrollTop.current = null;
+    }
   }, [visibleCount]);
 
   const revealMoreMobile = (event: MouseEvent<HTMLButtonElement>) => {
     pendingScrollLeft.current = shelfRowRef.current?.scrollLeft ?? null;
+    event.currentTarget.blur();
+    setVisibleCount((current) => Math.min(current + (initialCount ?? 0), shelfChannels.length));
+  };
+
+  const revealMoreDesktop = (event: MouseEvent<HTMLButtonElement>) => {
+    pendingPageScrollTop.current = window.scrollY;
     event.currentTarget.blur();
     setVisibleCount((current) => Math.min(current + (initialCount ?? 0), shelfChannels.length));
   };
@@ -2873,9 +2888,7 @@ function ChannelShelf({
           <span className="h-px bg-[#2f2f35]" />
           {visibleCount < shelfChannels.length ? (
             <button
-              onClick={() =>
-                setVisibleCount((current) => Math.min(current + initialCount, shelfChannels.length))
-              }
+              onClick={revealMoreDesktop}
               className="flex items-center gap-1 rounded-[4px] px-3 py-1.5 text-[13px] font-semibold text-[#dedee3] hover:bg-[#26262c] hover:text-white"
             >
               Show more
