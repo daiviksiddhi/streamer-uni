@@ -27,6 +27,12 @@ type TwitchClipsResponse = {
   data?: TwitchClip[];
 };
 
+type TwitchClipGroup = {
+  login: string;
+  clips: TwitchClip[];
+  failed: boolean;
+};
+
 const clipCacheHeaders = {
   "Cache-Control": "public, max-age=0, s-maxage=600, stale-while-revalidate=3600",
   "Vercel-CDN-Cache-Control": "s-maxage=600, stale-while-revalidate=3600"
@@ -67,6 +73,7 @@ export async function GET(request: Request) {
     .split(",")
     .map((user) => user.trim().toLowerCase())
     .filter(Boolean)
+    .filter((login, index, allLogins) => allLogins.indexOf(login) === index)
     .slice(0, 200);
   const clientId = process.env.TWITCH_CLIENT_ID;
   const clientSecret = process.env.TWITCH_CLIENT_SECRET;
@@ -98,13 +105,20 @@ export async function GET(request: Request) {
         return payload.data ?? [];
       })
     );
-    const startedAt = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    // Keep the upstream URLs stable within the same cache window. A timestamp based
+    // on the exact request time defeats Next's fetch cache on every regeneration.
+    const tenMinuteBucket = Math.floor(Date.now() / (10 * 60 * 1000)) * 10 * 60 * 1000;
+    const startedAt = new Date(tenMinuteBucket - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const endedAt = new Date(tenMinuteBucket).toISOString();
     const users = userPayloads.flat();
-    const clipGroups = await mapWithConcurrency(users, 12, async (user) => {
+    const clipGroups = await mapWithConcurrency<TwitchUser, TwitchClipGroup>(users, 8, async (user) => {
       const params = new URLSearchParams({
         broadcaster_id: user.id,
         started_at: startedAt,
-        first: "8"
+        ended_at: endedAt,
+        // Twitch returns broadcaster clips in descending view-count order. Keeping
+        // ten per channel is enough to calculate an exact global top-ten shelf.
+        first: "10"
       });
       const response = await fetch(`https://api.twitch.tv/helix/clips?${params.toString()}`, {
         headers: {
@@ -114,10 +128,16 @@ export async function GET(request: Request) {
         next: { revalidate: 600 }
       });
 
-      if (!response.ok) return { login: user.login, clips: [] as TwitchClip[] };
+      if (!response.ok) return { login: user.login, clips: [], failed: true };
       const payload = (await response.json()) as TwitchClipsResponse;
-      return { login: user.login, clips: payload.data ?? [] };
+      return { login: user.login, clips: payload.data ?? [], failed: false };
     });
+
+    // Never cache a partial roster response as a valid "trending" ranking. This was
+    // why production could show only low-view clips when some Twitch calls failed.
+    if (clipGroups.some((group) => group.failed)) {
+      throw new Error("One or more Twitch clip requests failed.");
+    }
 
     const campusLogins = new Set(logins);
     const clips = clipGroups
@@ -133,7 +153,7 @@ export async function GET(request: Request) {
           b.view_count - a.view_count ||
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )
-      .slice(0, 12);
+      .slice(0, 10);
 
     return NextResponse.json({ configured: true, clips }, { headers: clipCacheHeaders });
   } catch {

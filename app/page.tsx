@@ -763,14 +763,21 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
       .filter((channel) => channel.platform === "twitch")
       .map((channel) => channel.login);
 
-    fetch(`/api/twitch/clips?users=${encodeURIComponent(users.join(","))}`)
+    fetch(`/api/twitch/clips?ranking=top&users=${encodeURIComponent(users.join(","))}`)
       .then((response) =>
         response.json() as Promise<{
           clips?: TwitchClip[];
         }>
       )
       .then((payload) => {
-        if (!ignore) setPopularClips(payload.clips ?? []);
+        if (!ignore) {
+          const rankedClips = [...(payload.clips ?? [])].sort(
+            (a, b) =>
+              b.view_count - a.view_count ||
+              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+          setPopularClips(rankedClips);
+        }
       })
       .catch(() => {
         if (!ignore) setPopularClips([]);
@@ -1471,7 +1478,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
               className="md:hidden"
               title="Popular on campus"
               accent="the hottest streams right now"
-              channels={[...liveChannels].sort((a, b) => b.viewers - a.viewers).slice(0, 15)}
+              channels={[...liveChannels].sort((a, b) => b.viewers - a.viewers).slice(0, 24)}
               activeLogin={activeLogin}
               onSelect={openChannel}
               initialCount={6}
@@ -1488,7 +1495,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
                   : liveChannels)
               ]
                 .sort((a, b) => b.viewers - a.viewers)
-                .slice(0, 15)}
+                .slice(0, 24)}
               activeLogin={activeLogin}
               onSelect={openChannel}
               initialCount={6}
@@ -1505,7 +1512,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
               channels={[...liveChannels]
                 .filter((channel) => channel.viewers > 0)
                 .sort((a, b) => a.viewers - b.viewers)
-                .slice(0, 15)}
+                .slice(0, 24)}
               activeLogin={activeLogin}
               onSelect={openChannel}
               initialCount={6}
