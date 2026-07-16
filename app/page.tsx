@@ -280,8 +280,8 @@ const facultySeeds: SeedChannel[] = [
     accent: "#34d399"
   },
   {
-    login: "markellwashington1",
-    name: "MarkellWashington1",
+    login: "markellwashington",
+    name: "MarkellWashington",
     campusRole: "Club Director",
     category: "IRL",
     title: "IRL club: hallway interviews and campus bits",
@@ -408,7 +408,7 @@ const studentHandles = [
   "Reemknocks",
   "ysabellagrace",
   "Bonita",
-  "itsregtoofunny",
+  "regtoofunny",
   "e11ysa",
   "rulaempire",
   "Sarahfarrugia",
@@ -462,8 +462,8 @@ const studentHandles = [
   "ftgioo",
   "LailasimoneTV",
   "2xceeej",
-  "andrejmihelson",
-  "aishahsofeyy",
+  "malibuandre",
+  "aishahsofey",
   "Clarence_NYC",
   "Edwardkso",
   "AmberrTyson",
@@ -504,7 +504,7 @@ const studentHandles = [
   "straight2thbank__",
   "Smokecertified",
   "Aikooofficial",
-  "Mcqueen"
+  "mcqueennlive"
 ];
 
 const studentCategories = [
@@ -529,7 +529,6 @@ const studentAccents = [
 const studentPlatforms: Record<string, { platform: Platform; handle: string }> = {
   crystalizaguirre: { platform: "kick", handle: "crystalizaguirre" },
   flippenjosh: { platform: "kick", handle: "Flippenjosh" },
-  blasianbeautyalexis: { platform: "tiktok", handle: "Blasianbeautyalexis" },
   jaidabunni: { platform: "youtube", handle: "@Jaidabunni" }
 };
 
