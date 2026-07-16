@@ -48,6 +48,8 @@ type SeedChannel = {
   verified?: boolean;
   tags: string[];
   accent: string;
+  platform?: Platform;
+  platformHandle?: string;
 };
 
 type TwitchStream = {
@@ -232,7 +234,9 @@ const facultySeeds: SeedChannel[] = [
     live: true,
     verified: true,
     tags: ["Club Director", "Sports"],
-    accent: "#f97316"
+    accent: "#f97316",
+    platform: "youtube",
+    platformHandle: "@TheLethalShooter"
   },
   {
     login: "lifeofproto",
@@ -539,7 +543,7 @@ const channels: Channel[] = [
     live: false,
     viewers: 0,
     accent: channel.accent ?? studentAccents[index % studentAccents.length],
-    platform: "twitch" as const
+    platform: channel.platform ?? ("twitch" as const)
   })),
   ...studentHandles.map((handle, index) => {
     const category = studentCategories[index % studentCategories.length];
@@ -1827,6 +1831,7 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
   const [embedParent, setEmbedParent] = useState("");
   const [layout, setLayout] = useState<MultiviewLayout>("Focus");
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [pickerSearch, setPickerSearch] = useState("");
   const [selectedLogins, setSelectedLogins] = useState(() =>
     Array.from(new Set(initialLogins.map((login) => login.toLowerCase())))
       .filter((login) =>
@@ -1973,6 +1978,16 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
         .sort((a, b) => b.viewers - a.viewers),
     [directory]
   );
+  const filteredLiveChannels = useMemo(() => {
+    const query = pickerSearch.trim().toLowerCase();
+    if (!query) return liveChannels;
+
+    return liveChannels.filter((channel) =>
+      [channel.name, channel.login, channel.category, channel.title].some((value) =>
+        value.toLowerCase().includes(query)
+      )
+    );
+  }, [liveChannels, pickerSearch]);
   const selectedChannels = selectedLogins
     .map((login) => directory.find((channel) => channel.login === login))
     .filter((channel): channel is Channel => Boolean(channel?.live));
@@ -2025,7 +2040,10 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
         </div>
         <div className="relative">
           <button
-            onClick={() => setIsPickerOpen((current) => !current)}
+            onClick={() => {
+              if (isPickerOpen) setPickerSearch("");
+              setIsPickerOpen((current) => !current);
+            }}
             className={`flex h-8 items-center gap-2 rounded-[4px] px-2.5 text-[13px] font-semibold transition hover:bg-[#2f2f35] ${
               isPickerOpen ? "bg-[#2f2f35] text-white" : "text-[#dedee3]"
             }`}
@@ -2058,11 +2076,29 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
                   <span className="text-[14px] font-bold text-white">Live on campus</span>
                   <span className="text-[13px] font-semibold text-live-soft">{liveChannels.length}</span>
                 </div>
+                <div className="shrink-0 border-b border-[#34343b] p-2">
+                  <label className="flex h-9 items-center gap-2 rounded-[4px] border border-[#67676b] bg-[#18181b] px-2.5 focus-within:border-burgundy">
+                    <SearchIcon className="h-4 w-4 shrink-0 text-[#adadb8]" />
+                    <input
+                      autoFocus
+                      type="search"
+                      value={pickerSearch}
+                      onChange={(event) => setPickerSearch(event.target.value)}
+                      placeholder="Search live channels"
+                      aria-label="Search live campus channels"
+                      className="min-w-0 flex-1 bg-transparent text-[13px] text-white outline-none placeholder:text-[#7d7d85] focus-visible:outline-none"
+                    />
+                  </label>
+                </div>
                 <div className="min-h-0 overflow-y-auto py-1">
                   {isLoading ? (
                     <div className="px-3 py-6 text-center text-[13px] text-[#adadb8]">Loading live channels</div>
+                  ) : filteredLiveChannels.length === 0 ? (
+                    <div className="px-3 py-6 text-center text-[13px] text-[#adadb8]">
+                      {liveChannels.length === 0 ? "No channels are live right now." : "No live channels match your search."}
+                    </div>
                   ) : (
-                    liveChannels.map((channel) => {
+                    filteredLiveChannels.map((channel) => {
                       const isSelected = selectedLogins.includes(channel.login);
                       const atLimit = selectedLogins.length >= maxMultiviewChannels && !isSelected;
                       const selectionIndex = selectedLogins.indexOf(channel.login);
