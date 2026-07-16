@@ -164,8 +164,8 @@ const facultySeeds: SeedChannel[] = [
     accent: "#ffb000"
   },
   {
-    login: "poudiistreams",
-    name: "PoudiiStreams",
+    login: "poudii",
+    name: "Poudii",
     campusRole: "Professor",
     category: "IRL",
     title: "Campus walk-through and creator feedback",
