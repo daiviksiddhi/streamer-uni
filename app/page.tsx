@@ -763,7 +763,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
       .filter((channel) => channel.platform === "twitch")
       .map((channel) => channel.login);
 
-    fetch(`/api/twitch/clips?ranking=top-24h&users=${encodeURIComponent(users.join(","))}`)
+    fetch(`/api/twitch/clips?ranking=top-24h-live40-4h&users=${encodeURIComponent(users.join(","))}`)
       .then((response) =>
         response.json() as Promise<{
           clips?: TwitchClip[];
@@ -809,6 +809,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
           streams?: TwitchStream[];
           users?: TwitchUser[];
           games?: TwitchGame[];
+          error?: string;
         }>
     );
     const kickRequest: Promise<{ channels?: KickChannelStatus[] } | null> = kickSlugs.length
@@ -824,7 +825,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
 
     Promise.all([twitchRequest, kickRequest, youtubeRequest])
       .then(([twitchPayload, kickPayload, youtubePayload]) => {
-        if (ignore || !twitchPayload.configured) return;
+        if (ignore || !twitchPayload.configured || twitchPayload.error) return;
         const nextOverrides = publicChannels.reduce<Record<string, Partial<Channel>>>((acc, channel) => {
           acc[channel.login] = {
             live: false,
@@ -937,8 +938,9 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         const payload = (await response.json()) as {
           configured?: boolean;
           streams?: TwitchStream[];
+          error?: string;
         };
-        if (ignore || !payload.configured) return;
+        if (ignore || !payload.configured || payload.error) return;
 
         const streams = new Map(
           (payload.streams ?? []).map((stream) => [stream.user_login.toLowerCase(), stream])
@@ -2553,10 +2555,6 @@ function WatchStage({
         </div>
 
         <section className="flex min-h-0 flex-1 flex-col border-t border-[#2f2f35] bg-[#18181b]">
-          <div className="flex h-10 shrink-0 items-center justify-between border-b border-[#2f2f35] px-3">
-            <h2 className="text-[14px] font-semibold text-white">Stream Chat</h2>
-            <span className="truncate text-[12px] text-[#adadb8]">{channel.category}</span>
-          </div>
           {chatUrl ? (
             <iframe
               src={chatUrl}

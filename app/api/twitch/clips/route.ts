@@ -6,6 +6,11 @@ type TwitchUser = {
   login: string;
 };
 
+type TwitchStream = {
+  user_login: string;
+  viewer_count: number;
+};
+
 type TwitchClip = {
   id: string;
   url: string;
@@ -23,6 +28,10 @@ type TwitchUsersResponse = {
   data?: TwitchUser[];
 };
 
+type TwitchStreamsResponse = {
+  data?: TwitchStream[];
+};
+
 type TwitchClipsResponse = {
   data?: TwitchClip[];
 };
@@ -34,9 +43,16 @@ type TwitchClipGroup = {
 };
 
 const clipCacheHeaders = {
-  "Cache-Control": "public, max-age=0, s-maxage=600, stale-while-revalidate=3600",
-  "Vercel-CDN-Cache-Control": "s-maxage=600, stale-while-revalidate=3600"
+  "Cache-Control": "public, max-age=0, s-maxage=14400, stale-while-revalidate=14400",
+  "Vercel-CDN-Cache-Control": "s-maxage=14400, stale-while-revalidate=14400"
 };
+
+const degradedCacheHeaders = {
+  "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=600",
+  "Vercel-CDN-Cache-Control": "s-maxage=300, stale-while-revalidate=600"
+};
+
+const MAX_CLIP_CANDIDATES = 40;
 
 const chunkItems = <T,>(items: T[], size: number) => {
   const chunks: T[][] = [];
@@ -88,36 +104,85 @@ export async function GET(request: Request) {
 
   try {
     const accessToken = await getAppAccessToken(clientId, clientSecret);
-    const userPayloads = await Promise.all(
+    const directoryPayloads = await Promise.all(
       chunkItems(logins, 100).map(async (loginsChunk) => {
-        const params = new URLSearchParams();
-        loginsChunk.forEach((login) => params.append("login", login));
-        const response = await fetch(`https://api.twitch.tv/helix/users?${params.toString()}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Client-Id": clientId
-          },
-          next: { revalidate: 3600 }
+        const userParams = new URLSearchParams();
+        const streamParams = new URLSearchParams();
+        loginsChunk.forEach((login) => {
+          userParams.append("login", login);
+          streamParams.append("user_login", login);
         });
+        streamParams.set("first", "100");
+        const [usersResponse, streamsResponse] = await Promise.all([
+          fetch(`https://api.twitch.tv/helix/users?${userParams.toString()}`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Client-Id": clientId
+            },
+            next: { revalidate: 3600 }
+          }),
+          fetch(`https://api.twitch.tv/helix/streams?${streamParams.toString()}`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Client-Id": clientId
+            },
+            next: { revalidate: 60 }
+          })
+        ]);
 
-        if (!response.ok) return [] as TwitchUser[];
-        const payload = (await response.json()) as TwitchUsersResponse;
-        return payload.data ?? [];
+        if (!usersResponse.ok || !streamsResponse.ok) return null;
+        const [usersPayload, streamsPayload] = await Promise.all([
+          usersResponse.json() as Promise<TwitchUsersResponse>,
+          streamsResponse.json() as Promise<TwitchStreamsResponse>
+        ]);
+        return {
+          users: usersPayload.data ?? [],
+          streams: streamsPayload.data ?? []
+        };
       })
     );
+
+    if (directoryPayloads.some((payload) => !payload)) {
+      return NextResponse.json(
+        { configured: true, clips: [], degraded: true, error: "Twitch directory request was rate limited." },
+        { headers: degradedCacheHeaders }
+      );
+    }
+
+    const users = directoryPayloads.flatMap((payload) => payload?.users ?? []);
+    const streams = directoryPayloads.flatMap((payload) => payload?.streams ?? []);
+    const usersByLogin = new Map(users.map((user) => [user.login.toLowerCase(), user]));
+    const liveViewers = new Map(
+      streams.map((stream) => [stream.user_login.toLowerCase(), stream.viewer_count])
+    );
+    const orderedUsers = logins
+      .map((login) => usersByLogin.get(login))
+      .filter((user): user is TwitchUser => Boolean(user));
+    const liveUsers = orderedUsers
+      .filter((user) => liveViewers.has(user.login.toLowerCase()))
+      .sort(
+        (a, b) =>
+          (liveViewers.get(b.login.toLowerCase()) ?? 0) -
+          (liveViewers.get(a.login.toLowerCase()) ?? 0)
+      );
+    const selectedLogins = new Set(liveUsers.map((user) => user.login.toLowerCase()));
+    const clipCandidates = [
+      ...liveUsers,
+      ...orderedUsers.filter((user) => !selectedLogins.has(user.login.toLowerCase()))
+    ].slice(0, MAX_CLIP_CANDIDATES);
+
     // Keep the upstream URLs stable within the same cache window. A timestamp based
     // on the exact request time defeats Next's fetch cache on every regeneration.
-    const tenMinuteBucket = Math.floor(Date.now() / (10 * 60 * 1000)) * 10 * 60 * 1000;
-    const startedAt = new Date(tenMinuteBucket - 24 * 60 * 60 * 1000).toISOString();
-    const endedAt = new Date(tenMinuteBucket).toISOString();
-    const users = userPayloads.flat();
-    const clipGroups = await mapWithConcurrency<TwitchUser, TwitchClipGroup>(users, 8, async (user) => {
+    const fourHourBucket = Math.floor(Date.now() / (4 * 60 * 60 * 1000)) * 4 * 60 * 60 * 1000;
+    const startedAt = new Date(fourHourBucket - 24 * 60 * 60 * 1000).toISOString();
+    const endedAt = new Date(fourHourBucket).toISOString();
+    const clipGroups = await mapWithConcurrency<TwitchUser, TwitchClipGroup>(clipCandidates, 4, async (user) => {
       const params = new URLSearchParams({
         broadcaster_id: user.id,
         started_at: startedAt,
         ended_at: endedAt,
         // Twitch returns broadcaster clips in descending view-count order. Keeping
-        // ten per channel is enough to calculate an exact global top-ten shelf.
+        // ten per selected channel preserves the top-ten ranking within this pool.
         first: "10"
       });
       const response = await fetch(`https://api.twitch.tv/helix/clips?${params.toString()}`, {
@@ -125,7 +190,7 @@ export async function GET(request: Request) {
           Authorization: `Bearer ${accessToken}`,
           "Client-Id": clientId
         },
-        next: { revalidate: 600 }
+        next: { revalidate: 14400 }
       });
 
       if (!response.ok) return { login: user.login, clips: [], failed: true };
@@ -136,7 +201,10 @@ export async function GET(request: Request) {
     // Never cache a partial roster response as a valid "trending" ranking. This was
     // why production could show only low-view clips when some Twitch calls failed.
     if (clipGroups.some((group) => group.failed)) {
-      throw new Error("One or more Twitch clip requests failed.");
+      return NextResponse.json(
+        { configured: true, clips: [], degraded: true, error: "Twitch clip requests were rate limited." },
+        { headers: degradedCacheHeaders }
+      );
     }
 
     const campusLogins = new Set(logins);
@@ -158,8 +226,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ configured: true, clips }, { headers: clipCacheHeaders });
   } catch {
     return NextResponse.json(
-      { configured: true, clips: [], error: "Unable to load campus clips right now." },
-      { status: 502, headers: noStoreHeaders }
+      { configured: true, clips: [], degraded: true, error: "Unable to load campus clips right now." },
+      { headers: degradedCacheHeaders }
     );
   }
 }

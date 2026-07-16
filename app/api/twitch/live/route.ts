@@ -48,6 +48,11 @@ const successCacheHeaders = {
   "Vercel-CDN-Cache-Control": "s-maxage=30, stale-while-revalidate=120"
 };
 
+const degradedCacheHeaders = {
+  "Cache-Control": "public, max-age=0, s-maxage=30, stale-while-revalidate=60",
+  "Vercel-CDN-Cache-Control": "s-maxage=30, stale-while-revalidate=60"
+};
+
 function jsonResponse(payload: unknown, init?: ResponseInit) {
   return NextResponse.json(payload, {
     ...init,
@@ -97,6 +102,7 @@ export async function GET(request: Request) {
       chunkItems(users, 100).map(async (usersChunk) => {
         const streamParams = new URLSearchParams();
         usersChunk.forEach((user) => streamParams.append("user_login", user));
+        streamParams.set("first", "100");
         const userParams = new URLSearchParams();
         usersChunk.forEach((user) => userParams.append("login", user));
 
@@ -137,8 +143,8 @@ export async function GET(request: Request) {
 
     if (channelPayloads.some((payload) => !payload)) {
       return NextResponse.json(
-        { configured: true, streams: [], users: [], error: "Twitch channel request failed." },
-        { status: 502, headers: noStoreHeaders }
+        { configured: true, streams: [], users: [], degraded: true, error: "Twitch channel request failed." },
+        { headers: degradedCacheHeaders }
       );
     }
 
@@ -178,8 +184,8 @@ export async function GET(request: Request) {
     });
   } catch {
     return NextResponse.json(
-      { configured: true, streams: [], users: [], error: "Unable to reach Twitch right now." },
-      { status: 502, headers: noStoreHeaders }
+      { configured: true, streams: [], users: [], degraded: true, error: "Unable to reach Twitch right now." },
+      { headers: degradedCacheHeaders }
     );
   }
 }
