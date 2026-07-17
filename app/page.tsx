@@ -1165,6 +1165,20 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
     setActiveLogin(spotlightChannels[nextIndex].login);
   };
 
+  const openRandomLiveChannel = () => {
+    if (liveChannels.length === 0) return;
+
+    const candidates =
+      liveChannels.length > 1
+        ? liveChannels.filter((channel) => channel.login !== activeLogin)
+        : liveChannels;
+    const randomValue = new Uint32Array(1);
+    window.crypto.getRandomValues(randomValue);
+    const randomChannel = candidates[randomValue[0] % candidates.length];
+
+    if (randomChannel) openChannel(randomChannel.login);
+  };
+
   if (isDirectoryLoading) {
     return <DirectoryLoading />;
   }
@@ -1264,9 +1278,19 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
             <span className="absolute right-1 top-0.5 h-2 w-2 rounded-full bg-gold" />
           </button>
         </div>
+        <button
+          onClick={openRandomLiveChannel}
+          disabled={liveChannels.length === 0}
+          className="ml-1 hidden h-8 shrink-0 items-center gap-2 rounded-[4px] bg-[#2f2f35] px-2.5 text-[13px] font-bold text-[#efeff1] hover:bg-[#3b3b44] disabled:cursor-not-allowed disabled:text-[#676771] lg:flex xl:px-3"
+          aria-label={liveChannels.length > 0 ? "Watch a random live channel" : "No channels are live right now"}
+          title={liveChannels.length > 0 ? "Watch a random live channel" : "No channels are live right now"}
+        >
+          <ShuffleIcon className="h-4 w-4" />
+          <span className="hidden xl:inline">Random Stream</span>
+        </button>
         <Link
           href="/multiview"
-          className="su-primary hidden h-8 items-center gap-2 rounded-[4px] px-3.5 text-[13px] font-bold text-white lg:ml-2 lg:flex"
+          className="su-primary hidden h-8 shrink-0 items-center gap-2 rounded-[4px] px-3.5 text-[13px] font-bold text-white lg:ml-1 lg:flex"
         >
           <MultiviewIcon className="h-4 w-4" />
           Enter a Lecture Hall
@@ -1592,7 +1616,9 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
           />
           <MobileBottomNav
             directoryOpen={mobileDirectoryOpen}
+            hasLiveChannels={liveChannels.length > 0}
             onHome={browseHome}
+            onRandom={openRandomLiveChannel}
             onDirectory={() => setMobileDirectoryOpen((current) => !current)}
           />
         </>
@@ -1678,15 +1704,19 @@ function Footer() {
 
 function MobileBottomNav({
   directoryOpen,
+  hasLiveChannels,
   onHome,
+  onRandom,
   onDirectory
 }: {
   directoryOpen: boolean;
+  hasLiveChannels: boolean;
   onHome: () => void;
+  onRandom: () => void;
   onDirectory: () => void;
 }) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 grid h-[58px] grid-cols-2 border-t border-[#34343b] bg-[#18181b] md:hidden" aria-label="Mobile navigation">
+    <nav className="fixed inset-x-0 bottom-0 z-50 grid h-[58px] grid-cols-3 border-t border-[#34343b] bg-[#18181b] md:hidden" aria-label="Mobile navigation">
       <button
         onClick={onHome}
         className={`flex flex-col items-center justify-center gap-0.5 border-t-2 text-[11px] font-semibold ${
@@ -1696,6 +1726,15 @@ function MobileBottomNav({
       >
         <HomeIcon className="h-5 w-5" />
         Home
+      </button>
+      <button
+        onClick={onRandom}
+        disabled={!hasLiveChannels}
+        className="flex flex-col items-center justify-center gap-0.5 border-t-2 border-transparent text-[11px] font-semibold text-[#adadb8] hover:text-white disabled:cursor-not-allowed disabled:text-[#676771]"
+        aria-label={hasLiveChannels ? "Watch a random live channel" : "No channels are live right now"}
+      >
+        <ShuffleIcon className="h-5 w-5" />
+        Random
       </button>
       <button
         onClick={onDirectory}
@@ -3296,6 +3335,18 @@ function DirectoryIcon({ className }: { className?: string }) {
       <rect x="12" y="3" width="5" height="5" rx="0.5" />
       <rect x="3" y="12" width="5" height="5" rx="0.5" />
       <rect x="12" y="12" width="5" height="5" rx="0.5" />
+    </IconBase>
+  );
+}
+
+function ShuffleIcon({ className }: { className?: string }) {
+  return (
+    <IconBase className={className}>
+      <path d="M3 5h2.2c4.8 0 4.8 10 9.6 10H17" />
+      <path d="m14.5 12.5 2.5 2.5-2.5 2.5" />
+      <path d="M3 15h2.2c1.7 0 2.8-1.2 3.7-2.7" />
+      <path d="M11.1 7.7c.9-1.5 2-2.7 3.7-2.7H17" />
+      <path d="m14.5 2.5 2.5 2.5-2.5 2.5" />
     </IconBase>
   );
 }
