@@ -1861,7 +1861,7 @@ export default function Home() {
 }
 
 type MultiviewLayout = "Focus" | "Grid" | "Wide";
-const maxMultiviewChannels = 6;
+const maxMultiviewChannels = 8;
 
 export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] }) {
   const router = useRouter();
@@ -2034,12 +2034,18 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
     selectedChannels.find((channel) => channel.login === activeChatLogin) ?? selectedChannels[0] ?? null;
   const channelCount = selectedChannels.length;
   const usesSharedChat =
-    (layout === "Focus" && channelCount !== 5) || (layout === "Grid" && channelCount === 4);
+    (layout === "Focus" && ![5, 7, 8].includes(channelCount)) ||
+    (layout === "Grid" && channelCount === 4);
   const usesInlineChats = layout === "Grid" && selectedChannels.length <= 2;
   const usesGridChatTile =
-    (layout === "Grid" && channelCount === 3) || (channelCount === 5 && layout !== "Wide");
+    (layout === "Grid" && channelCount === 3) ||
+    (channelCount === 5 && layout !== "Wide") ||
+    (channelCount === 7 && layout !== "Wide") ||
+    (channelCount === 8 && layout === "Focus");
   const availableLayouts: MultiviewLayout[] =
-    channelCount === 6 ? ["Focus", "Wide"] : ["Focus", "Grid", "Wide"];
+    channelCount === 6 || channelCount === 8
+      ? ["Focus", "Wide"]
+      : ["Focus", "Grid", "Wide"];
 
   const updateSelection = (nextLogins: string[]) => {
     setSelectedLogins(nextLogins);
@@ -2299,27 +2305,37 @@ function MultiPlayerGrid({
 }) {
   const channelCount = channels.length;
   const gridClass =
-    channelCount === 6
+    channelCount === 8
       ? layout === "Focus"
-        ? "grid-cols-1 lg:grid-cols-2 lg:grid-rows-3"
-        : "grid-cols-1 lg:grid-cols-3 lg:grid-rows-2"
-      : channelCount === 5
-        ? layout === "Wide"
-          ? "grid-cols-1 lg:grid-cols-6 lg:grid-rows-2"
-          : "grid-cols-1 lg:grid-cols-3 lg:grid-rows-2"
-        : layout === "Grid"
-          ? "grid-cols-1 sm:grid-cols-2"
-          : layout === "Wide"
-            ? channelCount <= 2
-              ? "grid-cols-1"
-              : channelCount === 3
-                ? "grid-cols-1 lg:grid-cols-2 lg:grid-rows-2"
-                : "grid-cols-1 sm:grid-cols-2"
-            : channelCount <= 2
-              ? "grid-cols-1"
-              : channelCount === 4
-                ? "grid-cols-1 lg:grid-cols-3 lg:grid-rows-2"
-                : "grid-cols-1 lg:grid-cols-2 lg:grid-rows-2";
+        ? "grid-cols-1 lg:grid-cols-3 lg:grid-rows-3"
+        : "grid-cols-1 lg:grid-cols-4 lg:grid-rows-2"
+      : channelCount === 7
+        ? layout === "Focus"
+          ? "grid-cols-1 lg:grid-cols-4 lg:grid-rows-2"
+          : layout === "Grid"
+            ? "grid-cols-1 lg:grid-cols-[1fr_2fr_1fr] lg:grid-rows-3"
+            : "grid-cols-1 lg:grid-cols-12 lg:grid-rows-2"
+        : channelCount === 6
+          ? layout === "Focus"
+            ? "grid-cols-1 lg:grid-cols-2 lg:grid-rows-3"
+            : "grid-cols-1 lg:grid-cols-3 lg:grid-rows-2"
+          : channelCount === 5
+            ? layout === "Wide"
+              ? "grid-cols-1 lg:grid-cols-6 lg:grid-rows-2"
+              : "grid-cols-1 lg:grid-cols-3 lg:grid-rows-2"
+            : layout === "Grid"
+              ? "grid-cols-1 sm:grid-cols-2"
+              : layout === "Wide"
+                ? channelCount <= 2
+                  ? "grid-cols-1"
+                  : channelCount === 3
+                    ? "grid-cols-1 lg:grid-cols-2 lg:grid-rows-2"
+                    : "grid-cols-1 sm:grid-cols-2"
+                : channelCount <= 2
+                  ? "grid-cols-1"
+                  : channelCount === 4
+                    ? "grid-cols-1 lg:grid-cols-3 lg:grid-rows-2"
+                    : "grid-cols-1 lg:grid-cols-2 lg:grid-rows-2";
 
   const fiveChannelFocusPositions = [
     "lg:col-start-1 lg:row-start-1",
@@ -2335,8 +2351,19 @@ function MultiPlayerGrid({
     "lg:col-start-1 lg:row-start-2",
     "lg:col-start-3 lg:row-start-2"
   ];
+  const sevenChannelGridPositions = [
+    "lg:col-start-2 lg:row-span-2 lg:row-start-1",
+    "lg:col-start-1 lg:row-start-1",
+    "lg:col-start-1 lg:row-start-2",
+    "lg:col-start-1 lg:row-start-3",
+    "lg:col-start-3 lg:row-start-1",
+    "lg:col-start-3 lg:row-start-2",
+    "lg:col-start-3 lg:row-start-3"
+  ];
   const chatTileClass =
-    channelCount === 5
+    channelCount === 7 && layout === "Grid"
+      ? "lg:col-start-2 lg:row-start-3"
+      : channelCount === 5
       ? layout === "Focus"
         ? "lg:col-start-3 lg:row-start-1"
         : "lg:col-start-2 lg:row-start-2"
@@ -2346,7 +2373,15 @@ function MultiPlayerGrid({
     <div className={`grid min-h-[440px] gap-2 xl:h-full xl:min-h-0 ${gridClass}`}>
       {channels.map((channel, index) => {
         const tileClass =
-          channelCount === 5
+          channelCount === 7
+            ? layout === "Grid"
+              ? sevenChannelGridPositions[index]
+              : layout === "Wide"
+                ? index < 3
+                  ? "lg:col-span-4"
+                  : "lg:col-span-3"
+                : ""
+            : channelCount === 5
             ? layout === "Wide"
               ? index < 2
                 ? "lg:col-span-3"
@@ -3463,6 +3498,37 @@ function MultiviewLayoutPreview({
   );
 
   if (layout === "Focus") {
+    if (count === 8) {
+      return (
+        <div className="grid h-full w-full grid-cols-3 grid-rows-3 gap-[2px]">
+          {player(1)}
+          {player(2)}
+          {player(3)}
+          {player(4)}
+          {player(5)}
+          {player(6)}
+          {player(7)}
+          {player(8)}
+          {chat()}
+        </div>
+      );
+    }
+
+    if (count === 7) {
+      return (
+        <div className="grid h-full w-full grid-cols-4 grid-rows-2 gap-[2px]">
+          {player(1)}
+          {player(2)}
+          {player(3)}
+          {player(4)}
+          {player(5)}
+          {player(6)}
+          {player(7)}
+          {chat()}
+        </div>
+      );
+    }
+
     if (count === 6) {
       return (
         <div className="grid h-full w-full grid-cols-[1fr_10px] gap-[2px]">
@@ -3515,6 +3581,21 @@ function MultiviewLayoutPreview({
   }
 
   if (layout === "Grid") {
+    if (count === 7) {
+      return (
+        <div className="grid h-full w-full grid-cols-[1fr_2fr_1fr] grid-rows-3 gap-[2px]">
+          {player(1, "col-start-2 row-span-2 row-start-1")}
+          {player(2, "col-start-1 row-start-1")}
+          {player(3, "col-start-1 row-start-2")}
+          {player(4, "col-start-1 row-start-3")}
+          {player(5, "col-start-3 row-start-1")}
+          {player(6, "col-start-3 row-start-2")}
+          {player(7, "col-start-3 row-start-3")}
+          {chat("col-start-2 row-start-3")}
+        </div>
+      );
+    }
+
     if (count === 1) {
       return (
         <div className="grid h-full w-full grid-cols-[1fr_10px] gap-[2px]">
@@ -3583,6 +3664,35 @@ function MultiviewLayoutPreview({
       <div className="grid h-full w-full grid-rows-2 gap-[2px]">
         {player(1)}
         {player(2)}
+      </div>
+    );
+  }
+
+  if (count === 8) {
+    return (
+      <div className="grid h-full w-full grid-cols-4 grid-rows-2 gap-[2px]">
+        {player(1)}
+        {player(2)}
+        {player(3)}
+        {player(4)}
+        {player(5)}
+        {player(6)}
+        {player(7)}
+        {player(8)}
+      </div>
+    );
+  }
+
+  if (count === 7) {
+    return (
+      <div className="grid h-full w-full grid-cols-12 grid-rows-2 gap-[2px]">
+        {player(1, "col-span-4")}
+        {player(2, "col-span-4")}
+        {player(3, "col-span-4")}
+        {player(4, "col-span-3")}
+        {player(5, "col-span-3")}
+        {player(6, "col-span-3")}
+        {player(7, "col-span-3")}
       </div>
     );
   }
