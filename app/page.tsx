@@ -1695,7 +1695,17 @@ function Footer() {
           >
             Buy Merch
           </a>
-          <span>© {new Date().getFullYear()} — a fan project</span>
+          <span>
+            © {new Date().getFullYear()} — a fan project · Made by{" "}
+            <a
+              href="https://x.com/daiviksiddhi"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-gold hover:text-gold-soft hover:underline"
+            >
+              Daivik Siddhi
+            </a>
+          </span>
         </div>
       </div>
     </footer>
