@@ -142,6 +142,18 @@ const facultySeeds: SeedChannel[] = [
     accent: "#ff75e6"
   },
   {
+    login: "valkyrae",
+    name: "Valkyrae",
+    campusRole: "Professor",
+    category: "Just Chatting",
+    title: "Creator class: community, collaborations, and longevity",
+    viewers: 0,
+    live: false,
+    verified: true,
+    tags: ["Professor", "Creator Class"],
+    accent: "#d8b4fe"
+  },
+  {
     login: "duke",
     name: "Duke",
     campusRole: "Professor",
