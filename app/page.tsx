@@ -14,11 +14,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 type Platform = "twitch" | "kick" | "youtube" | "tiktok";
+type ChannelRole = "Faculty" | "Alumni" | "Student";
+type RosterFilter = "All" | "Faculty" | "Alumni" | "Students";
+
+const rosterFilters: RosterFilter[] = ["All", "Faculty", "Alumni", "Students"];
 
 type Channel = {
   login: string;
   name: string;
-  role: "Faculty" | "Student";
+  role: ChannelRole;
   campusRole: string;
   category: string;
   title: string;
@@ -523,6 +527,63 @@ const studentHandles = [
   "mcqueennlive"
 ];
 
+const alumniHandles = [
+  "corey2u",
+  "arky",
+  "aimhigh",
+  "nizzy_",
+  "viccgotti",
+  "yagirldes03",
+  "caiuwus",
+  "2xrakai",
+  "chicklethf",
+  "ryaah",
+  "funnymarco",
+  "sarasheehan",
+  "ojaysuave",
+  "thehoodbabies",
+  "keeyahthecreator",
+  "pungaxdezz",
+  "jaycinco",
+  "itskbakes",
+  "thelalabaptiste",
+  "thickneyy",
+  "extraemily",
+  "shaqqwith2qs",
+  "tbvnks",
+  "turahbaby",
+  "ddg",
+  "rynenzo",
+  "tylil",
+  "bendadonnn",
+  "indialovewestbrooks",
+  "quan",
+  "mari",
+  "reginald",
+  "aldogotit_",
+  "snowcone",
+  "totaamc",
+  "rayasianboy",
+  "im_dontai",
+  "shankcomics",
+  "alexandjessicaa",
+  "ninadaddyisback",
+  "raynkal",
+  "lightskinmonte",
+  "primatepaige",
+  "ripitrandy",
+  "samham",
+  "wendolynortizz",
+  "evelynomadera",
+  "evelynandbobby",
+  "emilycc",
+  "funnymike",
+  "iamvboogie",
+  "imbadkidjay",
+  "scumtk",
+  "raud"
+];
+
 const studentCategories = [
   "Just Chatting",
   "Streamer University",
@@ -574,6 +635,23 @@ const channels: Channel[] = [
       accent: studentAccents[index % studentAccents.length],
       platform: platformInfo?.platform ?? ("twitch" as const),
       platformHandle: platformInfo?.handle
+    };
+  }),
+  ...alumniHandles.map((handle, index) => {
+    const category = studentCategories[index % studentCategories.length];
+
+    return {
+      login: handle.toLowerCase(),
+      name: handle,
+      role: "Alumni" as const,
+      campusRole: "Alumni",
+      category,
+      title: `${handle} returns to Streamer University`,
+      viewers: 0,
+      live: false,
+      tags: ["Alumni", category],
+      accent: studentAccents[index % studentAccents.length],
+      platform: "twitch" as const
     };
   }),
   {
@@ -640,6 +718,7 @@ const getSpotlightChannels = (directory: Channel[]) => {
   };
 
   add(liveChannels.find((channel) => channel.role === "Faculty"));
+  add(liveChannels.find((channel) => channel.role === "Alumni"));
   add(liveChannels.find((channel) => channel.role === "Student"));
   add(liveChannels.find((channel) => !selected.some((current) => current.campusRole === channel.campusRole)));
 
@@ -658,6 +737,7 @@ const campusSections = [
   "Janitor",
   "Librarian",
   "Guidance Counselor",
+  "Alumni",
   "Student"
 ];
 
@@ -666,6 +746,7 @@ const getSectionTitle = (section: string) => {
   if (section === "Professor") return "Professors";
   if (section === "Campus Police") return "Campus Police";
   if (section === "Guidance Counselor") return "Guidance Counselor";
+  if (section === "Alumni") return "Alumni";
   if (section === "Student") return "Students";
   return `${section}s`;
 };
@@ -758,7 +839,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
   const [mobileDirectoryOpen, setMobileDirectoryOpen] = useState(false);
   const [sideOpen, setSideOpen] = useState(true);
   const [embedParent, setEmbedParent] = useState("");
-  const [filter, setFilter] = useState<"All" | "Faculty" | "Students">("All");
+  const [filter, setFilter] = useState<RosterFilter>("All");
   const [isRosterFilterOpen, setIsRosterFilterOpen] = useState(false);
   const [liveOnly, setLiveOnly] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
@@ -1094,6 +1175,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         const roleMatch =
           filter === "All" ||
           (filter === "Faculty" && channel.role === "Faculty") ||
+          (filter === "Alumni" && channel.role === "Alumni") ||
           (filter === "Students" && channel.role === "Student");
         return roleMatch && (!liveOnly || channel.live);
       }),
@@ -1105,8 +1187,10 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
       filter === "All"
         ? campusSections
         : filter === "Faculty"
-          ? campusSections.filter((section) => section !== "Student")
-          : ["Student"];
+          ? campusSections.filter((section) => section !== "Alumni" && section !== "Student")
+          : filter === "Alumni"
+            ? ["Alumni"]
+            : ["Student"];
     return roleSections.filter((section) => sidebarChannels.some((channel) => channel.campusRole === section));
   }, [filter, sidebarChannels]);
 
@@ -1150,7 +1234,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
     return () => window.clearInterval(timer);
   }, [initialLogin, spotlightChannels.length]);
 
-  const selectDirectoryFilter = (nextFilter: "All" | "Faculty" | "Students") => {
+  const selectDirectoryFilter = (nextFilter: RosterFilter) => {
     setFilter(nextFilter);
     setIsRosterFilterOpen(false);
     setCategoryFilter(null);
@@ -1163,8 +1247,14 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         return;
       }
 
+      const directoryIds: Record<Exclude<RosterFilter, "All">, string> = {
+        Faculty: "faculty-directory",
+        Alumni: "alumni-directory",
+        Students: "student-directory"
+      };
+
       document
-        .getElementById(nextFilter === "Faculty" ? "faculty-directory" : "student-directory")
+        .getElementById(directoryIds[nextFilter])
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   };
@@ -1359,7 +1449,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
                   </button>
                   {isRosterFilterOpen && (
                     <div className="absolute inset-x-0 top-[calc(100%+4px)] z-20 overflow-hidden rounded-[4px] border border-[#34343b] bg-[#18181b] shadow-[0_8px_18px_rgba(0,0,0,0.45)]">
-                      {(["All", "Faculty", "Students"] as const).map((item) => (
+                      {rosterFilters.map((item) => (
                         <button
                           key={item}
                           onClick={() => selectDirectoryFilter(item)}
@@ -1587,6 +1677,19 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
             />
 
             <ChannelShelf
+              id="alumni-directory"
+              title="Alumni"
+              accent="returning to campus"
+              channels={[...visibleChannels]
+                .filter((channel) => channel.role === "Alumni")
+                .sort((a, b) => Number(b.live) - Number(a.live) || b.viewers - a.viewers)}
+              activeLogin={activeLogin}
+              onSelect={openChannel}
+              initialCount={12}
+              emptyMessage="Returning alumni will appear here as they are announced."
+            />
+
+            <ChannelShelf
               id="student-directory"
               title="Student body"
               accent="the class of 2026"
@@ -1787,14 +1890,14 @@ function MobileDirectory({
   onSelectCategory
 }: {
   open: boolean;
-  filter: "All" | "Faculty" | "Students";
+  filter: RosterFilter;
   liveOnly: boolean;
   sections: string[];
   channels: Channel[];
   categories: CategoryStat[];
   art: Record<string, string>;
   activeLogin: string;
-  onFilter: (filter: "All" | "Faculty" | "Students") => void;
+  onFilter: (filter: RosterFilter) => void;
   onLiveOnly: () => void;
   onSelectChannel: (login: string) => void;
   onSelectCategory: (name: string) => void;
@@ -1809,8 +1912,8 @@ function MobileDirectory({
           <span className="text-[12px] text-[#adadb8]">{directoryChannels.length} channels</span>
         </div>
         <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
-          <div className="grid grid-cols-3 overflow-hidden rounded-[4px] bg-[#111114] p-1">
-            {(["All", "Faculty", "Students"] as const).map((item) => (
+          <div className="grid grid-cols-4 overflow-hidden rounded-[4px] bg-[#111114] p-1">
+            {rosterFilters.map((item) => (
               <button
                 key={item}
                 onClick={() => onFilter(item)}

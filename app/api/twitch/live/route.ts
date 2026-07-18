@@ -75,11 +75,14 @@ const chunkItems = <T,>(items: T[], size: number) => {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const users = (searchParams.get("users") ?? "")
-    .split(",")
-    .map((user) => user.trim().toLowerCase())
-    .filter(Boolean)
-    .slice(0, 200);
+  const users = Array.from(
+    new Set(
+      (searchParams.get("users") ?? "")
+        .split(",")
+        .map((user) => user.trim().toLowerCase())
+        .filter(Boolean)
+    )
+  ).slice(0, 250);
 
   const clientId = process.env.TWITCH_CLIENT_ID;
   const clientSecret = process.env.TWITCH_CLIENT_SECRET;

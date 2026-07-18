@@ -5,7 +5,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Streamer University Live",
-  description: "A campus live directory for Streamer University staff and students.",
+  description: "A campus live directory for Streamer University staff, alumni, and students.",
   icons: {
     icon: "/su-crest-2026-transparent.png",
     shortcut: "/su-crest-2026-transparent.png",
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Streamer University Live",
-    description: "A campus live directory for Streamer University staff and students.",
+    description: "A campus live directory for Streamer University staff, alumni, and students.",
     type: "website"
   }
 };
