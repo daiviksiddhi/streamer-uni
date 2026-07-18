@@ -699,6 +699,9 @@ const excludedCategories = new Set(["Animals, Aquariums, and Zoos", "Sports", "P
 
 const formatViewers = (value: number) => {
   if (value === 0) return "Offline";
+  if (value >= 1_000_000) {
+    return `${Number((value / 1_000_000).toFixed(1))}M`;
+  }
   if (value >= 1000) {
     const rounded = value / 1000;
     return `${Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1)}K`;
