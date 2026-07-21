@@ -1,0 +1,1038 @@
+{
+  "generatedAt": "2026-07-20T22:06:11.225Z",
+  "event": {
+    "name": "Streamer University 2026",
+    "start": "2026-07-15T04:00:00.000Z",
+    "end": "2026-07-21T04:00:00.000Z",
+    "displayDates": "July 15-20, 2026"
+  },
+  "methodology": {
+    "metricsSource": "Streams Charts",
+    "metricsWindow": "2026-07-13,2026-07-19",
+    "metricsCoverage": "32 campus channels present in the provider's worldwide top-100 snapshot",
+    "clipsSource": "Twitch Helix",
+    "clipsWindow": "July 15-20, 2026",
+    "note": "Historical leaderboards use the available trailing-week provider snapshot, not an exact event-only export. Clip rankings use the exact event dates."
+  },
+  "counts": {
+    "roster": 199,
+    "faculty": 25,
+    "students": 120,
+    "alumni": 54,
+    "ranked": 32,
+    "awards": 27
+  },
+  "totals": {
+    "hoursWatched": 45329579,
+    "followersGained": 6724055,
+    "averageViewers": 936777,
+    "peakViewers": 2744759
+  },
+  "highlights": {
+    "hoursWatched": [
+      {
+        "login": "stableronaldo",
+        "name": "stableronaldo",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/020d2ed3-c2f2-4d33-805f-92cf966a9c43-profile_image-300x300.png",
+        "hoursWatched": 5474192,
+        "peakViewers": 168044,
+        "averageViewers": 51644,
+        "airtimeMinutes": 6360,
+        "followersGained": 288055,
+        "liveViews": 35829504,
+        "rank": 1
+      },
+      {
+        "login": "kaicenat",
+        "name": "KaiCenat",
+        "role": "Faculty",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/bf6a04cf-3f44-4986-8eed-5c36bfad542b-profile_image-300x300.png",
+        "hoursWatched": 5407444,
+        "peakViewers": 594101,
+        "averageViewers": 337966,
+        "airtimeMinutes": 960,
+        "followersGained": 423768,
+        "liveViews": 50703680,
+        "rank": 2
+      },
+      {
+        "login": "suburbbaby",
+        "name": "Suburbbaby",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/81e048e9-2ca5-4808-adfa-6e5e7e2a989f-profile_image-300x300.png",
+        "hoursWatched": 4745036,
+        "peakViewers": 195356,
+        "averageViewers": 46107,
+        "airtimeMinutes": 6175,
+        "followersGained": 551339,
+        "liveViews": 39519657,
+        "rank": 3
+      },
+      {
+        "login": "lacy",
+        "name": "Lacy",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/48487d3b-e713-4a49-ad35-dec6ab7d690e-profile_image-300x300.png",
+        "hoursWatched": 4413631,
+        "peakViewers": 120782,
+        "averageViewers": 39175,
+        "airtimeMinutes": 6760,
+        "followersGained": 446082,
+        "liveViews": 52415397,
+        "rank": 4
+      },
+      {
+        "login": "kaneljoseph",
+        "name": "KanelJoseph",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/a1c500f8-8cd5-4be5-aa45-5c3f80d36242-profile_image-300x300.png",
+        "hoursWatched": 2502031,
+        "peakViewers": 80711,
+        "averageViewers": 30575,
+        "airtimeMinutes": 4910,
+        "followersGained": 281253,
+        "liveViews": 17600897,
+        "rank": 5
+      },
+      {
+        "login": "jasontheween",
+        "name": "jasontheween",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/a04be2b0-9cc1-403c-a4b0-47b32d1fe640-profile_image-300x300.png",
+        "hoursWatched": 2377285,
+        "peakViewers": 161863,
+        "averageViewers": 24551,
+        "airtimeMinutes": 5810,
+        "followersGained": 295556,
+        "liveViews": 48574119,
+        "rank": 6
+      },
+      {
+        "login": "plaqueboymax",
+        "name": "PlaqueBoyMax",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/14f0fcfd-00d4-4004-9379-93e0c6336f5e-profile_image-300x300.png",
+        "hoursWatched": 2025783,
+        "peakViewers": 91507,
+        "averageViewers": 25807,
+        "airtimeMinutes": 4710,
+        "followersGained": 277913,
+        "liveViews": 14430893,
+        "rank": 7
+      },
+      {
+        "login": "wardrobewinter",
+        "name": "wardrobewinter",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/661a5b96-db93-4a14-b197-83c8939cb7d1-profile_image-300x300.png",
+        "hoursWatched": 1648884,
+        "peakViewers": 67850,
+        "averageViewers": 17327,
+        "airtimeMinutes": 5710,
+        "followersGained": 342669,
+        "liveViews": 27374376,
+        "rank": 8
+      }
+    ],
+    "followersGained": [
+      {
+        "login": "suburbbaby",
+        "name": "Suburbbaby",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/81e048e9-2ca5-4808-adfa-6e5e7e2a989f-profile_image-300x300.png",
+        "hoursWatched": 4745036,
+        "peakViewers": 195356,
+        "averageViewers": 46107,
+        "airtimeMinutes": 6175,
+        "followersGained": 551339,
+        "liveViews": 39519657,
+        "rank": 1
+      },
+      {
+        "login": "yonnajay",
+        "name": "YonnaJay",
+        "role": "Faculty",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/f58b2aa6-d78c-4e15-abd5-4b1eafa16e4f-profile_image-300x300.png",
+        "hoursWatched": 1512283,
+        "peakViewers": 53509,
+        "averageViewers": 15920,
+        "airtimeMinutes": 5700,
+        "followersGained": 495713,
+        "liveViews": 36651920,
+        "rank": 2
+      },
+      {
+        "login": "lacy",
+        "name": "Lacy",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/48487d3b-e713-4a49-ad35-dec6ab7d690e-profile_image-300x300.png",
+        "hoursWatched": 4413631,
+        "peakViewers": 120782,
+        "averageViewers": 39175,
+        "airtimeMinutes": 6760,
+        "followersGained": 446082,
+        "liveViews": 52415397,
+        "rank": 3
+      },
+      {
+        "login": "kaicenat",
+        "name": "KaiCenat",
+        "role": "Faculty",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/bf6a04cf-3f44-4986-8eed-5c36bfad542b-profile_image-300x300.png",
+        "hoursWatched": 5407444,
+        "peakViewers": 594101,
+        "averageViewers": 337966,
+        "airtimeMinutes": 960,
+        "followersGained": 423768,
+        "liveViews": 50703680,
+        "rank": 4
+      },
+      {
+        "login": "wardrobewinter",
+        "name": "wardrobewinter",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/661a5b96-db93-4a14-b197-83c8939cb7d1-profile_image-300x300.png",
+        "hoursWatched": 1648884,
+        "peakViewers": 67850,
+        "averageViewers": 17327,
+        "airtimeMinutes": 5710,
+        "followersGained": 342669,
+        "liveViews": 27374376,
+        "rank": 5
+      },
+      {
+        "login": "ilikehaskell",
+        "name": "ilikehaskell",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/47926a3e-8f58-48ea-8e3c-a81197906175-profile_image-300x300.png",
+        "hoursWatched": 515995,
+        "peakViewers": 43656,
+        "averageViewers": 9616,
+        "airtimeMinutes": 3220,
+        "followersGained": 320695,
+        "liveViews": 13844663,
+        "rank": 6
+      },
+      {
+        "login": "fanum",
+        "name": "Fanum",
+        "role": "Faculty",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/276ceeb1-3553-4874-ae99-fc0b448ca6e0-profile_image-300x300.png",
+        "hoursWatched": 936725,
+        "peakViewers": 190987,
+        "averageViewers": 31844,
+        "airtimeMinutes": 1765,
+        "followersGained": 318342,
+        "liveViews": 22787488,
+        "rank": 7
+      },
+      {
+        "login": "marlon",
+        "name": "Marlon",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/71f5f92d-c94b-41ba-80f2-480165a94605-profile_image-300x300.png",
+        "hoursWatched": 1227328,
+        "peakViewers": 50939,
+        "averageViewers": 12808,
+        "airtimeMinutes": 5750,
+        "followersGained": 295908,
+        "liveViews": 35135055,
+        "rank": 8
+      }
+    ],
+    "averageViewers": [
+      {
+        "login": "kaicenat",
+        "name": "KaiCenat",
+        "role": "Faculty",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/bf6a04cf-3f44-4986-8eed-5c36bfad542b-profile_image-300x300.png",
+        "hoursWatched": 5407444,
+        "peakViewers": 594101,
+        "averageViewers": 337966,
+        "airtimeMinutes": 960,
+        "followersGained": 423768,
+        "liveViews": 50703680,
+        "rank": 1
+      },
+      {
+        "login": "2xrakai",
+        "name": "2xRaKai",
+        "role": "Alumni",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/b5d43658-37ed-4481-907d-3b6939bd0825-profile_image-300x300.png",
+        "hoursWatched": 1647654,
+        "peakViewers": 230542,
+        "averageViewers": 97881,
+        "airtimeMinutes": 1010,
+        "followersGained": 204365,
+        "liveViews": 24539558,
+        "rank": 2
+      },
+      {
+        "login": "stableronaldo",
+        "name": "stableronaldo",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/020d2ed3-c2f2-4d33-805f-92cf966a9c43-profile_image-300x300.png",
+        "hoursWatched": 5474192,
+        "peakViewers": 168044,
+        "averageViewers": 51644,
+        "airtimeMinutes": 6360,
+        "followersGained": 288055,
+        "liveViews": 35829504,
+        "rank": 3
+      },
+      {
+        "login": "suburbbaby",
+        "name": "Suburbbaby",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/81e048e9-2ca5-4808-adfa-6e5e7e2a989f-profile_image-300x300.png",
+        "hoursWatched": 4745036,
+        "peakViewers": 195356,
+        "averageViewers": 46107,
+        "airtimeMinutes": 6175,
+        "followersGained": 551339,
+        "liveViews": 39519657,
+        "rank": 4
+      },
+      {
+        "login": "lacy",
+        "name": "Lacy",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/48487d3b-e713-4a49-ad35-dec6ab7d690e-profile_image-300x300.png",
+        "hoursWatched": 4413631,
+        "peakViewers": 120782,
+        "averageViewers": 39175,
+        "airtimeMinutes": 6760,
+        "followersGained": 446082,
+        "liveViews": 52415397,
+        "rank": 5
+      },
+      {
+        "login": "fanum",
+        "name": "Fanum",
+        "role": "Faculty",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/276ceeb1-3553-4874-ae99-fc0b448ca6e0-profile_image-300x300.png",
+        "hoursWatched": 936725,
+        "peakViewers": 190987,
+        "averageViewers": 31844,
+        "airtimeMinutes": 1765,
+        "followersGained": 318342,
+        "liveViews": 22787488,
+        "rank": 6
+      },
+      {
+        "login": "kaneljoseph",
+        "name": "KanelJoseph",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/a1c500f8-8cd5-4be5-aa45-5c3f80d36242-profile_image-300x300.png",
+        "hoursWatched": 2502031,
+        "peakViewers": 80711,
+        "averageViewers": 30575,
+        "airtimeMinutes": 4910,
+        "followersGained": 281253,
+        "liveViews": 17600897,
+        "rank": 7
+      },
+      {
+        "login": "funnymike",
+        "name": "funnymike",
+        "role": "Alumni",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/a14ac3ab-e622-41f5-ad66-b115e154b58f-profile_image-300x300.png",
+        "hoursWatched": 916662,
+        "peakViewers": 119147,
+        "averageViewers": 29730,
+        "airtimeMinutes": 1850,
+        "followersGained": 203497,
+        "liveViews": 11223926,
+        "rank": 8
+      }
+    ],
+    "peakViewers": [
+      {
+        "login": "kaicenat",
+        "name": "KaiCenat",
+        "role": "Faculty",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/bf6a04cf-3f44-4986-8eed-5c36bfad542b-profile_image-300x300.png",
+        "hoursWatched": 5407444,
+        "peakViewers": 594101,
+        "averageViewers": 337966,
+        "airtimeMinutes": 960,
+        "followersGained": 423768,
+        "liveViews": 50703680,
+        "rank": 1
+      },
+      {
+        "login": "2xrakai",
+        "name": "2xRaKai",
+        "role": "Alumni",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/b5d43658-37ed-4481-907d-3b6939bd0825-profile_image-300x300.png",
+        "hoursWatched": 1647654,
+        "peakViewers": 230542,
+        "averageViewers": 97881,
+        "airtimeMinutes": 1010,
+        "followersGained": 204365,
+        "liveViews": 24539558,
+        "rank": 2
+      },
+      {
+        "login": "suburbbaby",
+        "name": "Suburbbaby",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/81e048e9-2ca5-4808-adfa-6e5e7e2a989f-profile_image-300x300.png",
+        "hoursWatched": 4745036,
+        "peakViewers": 195356,
+        "averageViewers": 46107,
+        "airtimeMinutes": 6175,
+        "followersGained": 551339,
+        "liveViews": 39519657,
+        "rank": 3
+      },
+      {
+        "login": "fanum",
+        "name": "Fanum",
+        "role": "Faculty",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/276ceeb1-3553-4874-ae99-fc0b448ca6e0-profile_image-300x300.png",
+        "hoursWatched": 936725,
+        "peakViewers": 190987,
+        "averageViewers": 31844,
+        "airtimeMinutes": 1765,
+        "followersGained": 318342,
+        "liveViews": 22787488,
+        "rank": 4
+      },
+      {
+        "login": "stableronaldo",
+        "name": "stableronaldo",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/020d2ed3-c2f2-4d33-805f-92cf966a9c43-profile_image-300x300.png",
+        "hoursWatched": 5474192,
+        "peakViewers": 168044,
+        "averageViewers": 51644,
+        "airtimeMinutes": 6360,
+        "followersGained": 288055,
+        "liveViews": 35829504,
+        "rank": 5
+      },
+      {
+        "login": "jasontheween",
+        "name": "jasontheween",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/a04be2b0-9cc1-403c-a4b0-47b32d1fe640-profile_image-300x300.png",
+        "hoursWatched": 2377285,
+        "peakViewers": 161863,
+        "averageViewers": 24551,
+        "airtimeMinutes": 5810,
+        "followersGained": 295556,
+        "liveViews": 48574119,
+        "rank": 6
+      },
+      {
+        "login": "lacy",
+        "name": "Lacy",
+        "role": "Student",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/48487d3b-e713-4a49-ad35-dec6ab7d690e-profile_image-300x300.png",
+        "hoursWatched": 4413631,
+        "peakViewers": 120782,
+        "averageViewers": 39175,
+        "airtimeMinutes": 6760,
+        "followersGained": 446082,
+        "liveViews": 52415397,
+        "rank": 7
+      },
+      {
+        "login": "funnymike",
+        "name": "funnymike",
+        "role": "Alumni",
+        "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/a14ac3ab-e622-41f5-ad66-b115e154b58f-profile_image-300x300.png",
+        "hoursWatched": 916662,
+        "peakViewers": 119147,
+        "averageViewers": 29730,
+        "airtimeMinutes": 1850,
+        "followersGained": 203497,
+        "liveViews": 11223926,
+        "rank": 8
+      }
+    ]
+  },
+  "clips": [
+    {
+      "id": "SwissManlyKangarooPRChase-fCO_OHO9QUIuPGlg",
+      "title": "broo",
+      "url": "https://www.twitch.tv/kaicenat/clip/SwissManlyKangarooPRChase-fCO_OHO9QUIuPGlg",
+      "thumbnail": "https://static-cdn.jtvnw.net/twitch-video-assets/twitch-vap-video-assets-prod-us-west-2/148c6068-c59e-4c05-a020-2b240ea1bd54/landscape/thumb/thumb-0000000000-480x272.jpg",
+      "views": 1067601,
+      "createdAt": "2026-07-15T23:58:14Z",
+      "duration": 5.5,
+      "broadcaster": "KaiCenat",
+      "login": "kaicenat",
+      "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/bf6a04cf-3f44-4986-8eed-5c36bfad542b-profile_image-300x300.png"
+    },
+    {
+      "id": "DaintyBoldCiderStrawBeary-WFhL2jI0QYXRH2J-",
+      "title": "They snitched on you",
+      "url": "https://www.twitch.tv/kaicenat/clip/DaintyBoldCiderStrawBeary-WFhL2jI0QYXRH2J-",
+      "thumbnail": "https://static-cdn.jtvnw.net/twitch-video-assets/twitch-vap-video-assets-prod-us-west-2/abc3193a-f260-4671-82fd-a3651cf78c66/landscape/thumb/thumb-0000000000-480x272.jpg",
+      "views": 379278,
+      "createdAt": "2026-07-16T19:46:48Z",
+      "duration": 6.2,
+      "broadcaster": "KaiCenat",
+      "login": "kaicenat",
+      "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/bf6a04cf-3f44-4986-8eed-5c36bfad542b-profile_image-300x300.png"
+    },
+    {
+      "id": "BlitheGleamingManateeBibleThump-1Uku3P2bnviuZOpW",
+      "title": "MOG OFF",
+      "url": "https://www.twitch.tv/ilikehaskell/clip/BlitheGleamingManateeBibleThump-1Uku3P2bnviuZOpW",
+      "thumbnail": "https://static-cdn.jtvnw.net/twitch-video-assets/twitch-vap-video-assets-prod-us-west-2/55317ee8-9c23-4378-bb48-ec45f4945dab/landscape/thumb/thumb-0000000000-480x272.jpg",
+      "views": 269895,
+      "createdAt": "2026-07-15T22:34:32Z",
+      "duration": 6.3,
+      "broadcaster": "ilikehaskell",
+      "login": "ilikehaskell",
+      "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/47926a3e-8f58-48ea-8e3c-a81197906175-profile_image-300x300.png"
+    },
+    {
+      "id": "ReliableThoughtfulRuffOSkomodo-er2hWnZ08_8KWcCE",
+      "title": "SCUBAAA AT SU WITH EZEE",
+      "url": "https://www.twitch.tv/yonnajay/clip/ReliableThoughtfulRuffOSkomodo-er2hWnZ08_8KWcCE",
+      "thumbnail": "https://static-cdn.jtvnw.net/twitch-video-assets/twitch-vap-video-assets-prod-us-west-2/35b155c4-82d7-4c13-9e3b-6523e39cd09c/landscape/thumb/thumb-0000000000-480x272.jpg",
+      "views": 171654,
+      "createdAt": "2026-07-16T01:01:47Z",
+      "duration": 10.7,
+      "broadcaster": "YonnaJay",
+      "login": "yonnajay",
+      "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/f58b2aa6-d78c-4e15-abd5-4b1eafa16e4f-profile_image-300x300.png"
+    },
+    {
+      "id": "BumblingSourPresidentDAESuppy-MgXNpOtTHv5xA7xJ",
+      "title": "SAD WENDY",
+      "url": "https://www.twitch.tv/wendolynortizz/clip/BumblingSourPresidentDAESuppy-MgXNpOtTHv5xA7xJ",
+      "thumbnail": "https://static-cdn.jtvnw.net/twitch-video-assets/twitch-vap-video-assets-prod-us-west-2/aebab234-2da1-4ae7-8bb7-e70180b9d509/landscape/thumb/thumb-0000000000-480x272.jpg",
+      "views": 160570,
+      "createdAt": "2026-07-15T20:27:12Z",
+      "duration": 14.9,
+      "broadcaster": "wendolynortizz",
+      "login": "wendolynortizz",
+      "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/be45309c-e89a-4374-b69f-6b4368eef40a-profile_image-300x300.png"
+    },
+    {
+      "id": "CrispyGenerousNewtBIRB-dDe064LZ7SCmJegy",
+      "title": "rakai pours sauce on girl",
+      "url": "https://www.twitch.tv/2xrakai/clip/CrispyGenerousNewtBIRB-dDe064LZ7SCmJegy",
+      "thumbnail": "https://static-cdn.jtvnw.net/twitch-video-assets/twitch-vap-video-assets-prod-us-west-2/a73e2268-213d-46ca-8d85-2c6711920ba2/landscape/thumb/thumb-0000000000-480x272.jpg",
+      "views": 150402,
+      "createdAt": "2026-07-18T19:06:18Z",
+      "duration": 13.8,
+      "broadcaster": "2xRaKai",
+      "login": "2xrakai",
+      "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/b5d43658-37ed-4481-907d-3b6939bd0825-profile_image-300x300.png"
+    },
+    {
+      "id": "ChillyOriginalSquidFailFish-mSEMVcy1Z7rX9WX5",
+      "title": "CLEAN THIS",
+      "url": "https://www.twitch.tv/lacy/clip/ChillyOriginalSquidFailFish-mSEMVcy1Z7rX9WX5",
+      "thumbnail": "https://static-cdn.jtvnw.net/twitch-video-assets/twitch-vap-video-assets-prod-us-west-2/aa8f8102-1279-4d6a-821b-d10531c7f1e1/landscape/thumb/thumb-0000000000-480x272.jpg",
+      "views": 143443,
+      "createdAt": "2026-07-16T06:06:05Z",
+      "duration": 19.1,
+      "broadcaster": "Lacy",
+      "login": "lacy",
+      "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/48487d3b-e713-4a49-ad35-dec6ab7d690e-profile_image-300x300.png"
+    },
+    {
+      "id": "FantasticOriginalPeafowlImGlitch-e3el6xeietG_El3m",
+      "title": "aura",
+      "url": "https://www.twitch.tv/marlon/clip/FantasticOriginalPeafowlImGlitch-e3el6xeietG_El3m",
+      "thumbnail": "https://static-cdn.jtvnw.net/twitch-video-assets/twitch-vap-video-assets-prod-us-west-2/024f5af4-8df8-4be4-ad0c-2c5a183637c3/landscape/thumb/thumb-0000000000-480x272.jpg",
+      "views": 117853,
+      "createdAt": "2026-07-16T03:56:24Z",
+      "duration": 11.7,
+      "broadcaster": "Marlon",
+      "login": "marlon",
+      "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/71f5f92d-c94b-41ba-80f2-480165a94605-profile_image-300x300.png"
+    },
+    {
+      "id": "FairAffluentPigeonAMPEnergyCherry-qqYLgJxA-hgnB3CP",
+      "title": "haskell slam",
+      "url": "https://www.twitch.tv/ilikehaskell/clip/FairAffluentPigeonAMPEnergyCherry-qqYLgJxA-hgnB3CP",
+      "thumbnail": "https://static-cdn.jtvnw.net/twitch-video-assets/twitch-vap-video-assets-prod-us-west-2/674a4464-366e-408d-9a92-78750fd7e5ec/landscape/thumb/thumb-0000000000-480x272.jpg",
+      "views": 104482,
+      "createdAt": "2026-07-15T22:40:02Z",
+      "duration": 12.7,
+      "broadcaster": "ilikehaskell",
+      "login": "ilikehaskell",
+      "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/47926a3e-8f58-48ea-8e3c-a81197906175-profile_image-300x300.png"
+    },
+    {
+      "id": "ClumsyDarkPassionfruitBCouch-IAtE_BZ87kE7PQSG",
+      "title": "kai beats up and rips clothes💀😭",
+      "url": "https://www.twitch.tv/stableronaldo/clip/ClumsyDarkPassionfruitBCouch-IAtE_BZ87kE7PQSG",
+      "thumbnail": "https://static-cdn.jtvnw.net/twitch-video-assets/twitch-vap-video-assets-prod-us-west-2/a59586a8-ddf7-4bfa-9a41-feb95c425ac2/landscape/thumb/thumb-0000000000-480x272.jpg",
+      "views": 87421,
+      "createdAt": "2026-07-16T05:40:17Z",
+      "duration": 30,
+      "broadcaster": "stableronaldo",
+      "login": "stableronaldo",
+      "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/020d2ed3-c2f2-4d33-805f-92cf966a9c43-profile_image-300x300.png"
+    },
+    {
+      "id": "PowerfulSincereWheelOptimizePrime-6EE3Rxv0q7ywaczG",
+      "title": "madi got slaped by cudi",
+      "url": "https://www.twitch.tv/madi2hottyy/clip/PowerfulSincereWheelOptimizePrime-6EE3Rxv0q7ywaczG",
+      "thumbnail": "https://static-cdn.jtvnw.net/twitch-video-assets/twitch-vap-video-assets-prod-us-west-2/60de3291-2f45-42b6-8797-07460d618851/landscape/thumb/thumb-0000000000-480x272.jpg",
+      "views": 81634,
+      "createdAt": "2026-07-16T06:30:17Z",
+      "duration": 19.2,
+      "broadcaster": "Madi2hottyy",
+      "login": "madi2hottyy",
+      "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/ffdf318c-32c0-4cdf-ac7a-8704e928c199-profile_image-300x300.png"
+    },
+    {
+      "id": "InquisitiveSillyGaurHassaanChop-jMCWr0-Ug7x-VrT2",
+      "title": "cliped",
+      "url": "https://www.twitch.tv/kaicenat/clip/InquisitiveSillyGaurHassaanChop-jMCWr0-Ug7x-VrT2",
+      "thumbnail": "https://static-cdn.jtvnw.net/twitch-video-assets/twitch-vap-video-assets-prod-us-west-2/a46095f3-5187-4e68-a583-b441853a7b66/landscape/thumb/thumb-0000000000-480x272.jpg",
+      "views": 80509,
+      "createdAt": "2026-07-15T22:39:52Z",
+      "duration": 27.4,
+      "broadcaster": "KaiCenat",
+      "login": "kaicenat",
+      "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/bf6a04cf-3f44-4986-8eed-5c36bfad542b-profile_image-300x300.png"
+    }
+  ],
+  "awards": [
+    {
+      "title": "Most Improved",
+      "winner": "McQueen",
+      "handles": [
+        "mcqueennlive"
+      ],
+      "profiles": [
+        {
+          "login": "mcqueennlive",
+          "name": "mcqueennlive",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/8aabcf24-7b20-49a8-9344-19c6fc482191-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Master of Mentorship",
+      "winner": "Agent00",
+      "handles": [
+        "agent00"
+      ],
+      "profiles": [
+        {
+          "login": "agent00",
+          "name": "Agent00",
+          "role": "Faculty",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/a83b628d80bcbe4f-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Biggest Flirt",
+      "winner": "SukiiMellow",
+      "handles": [
+        "sukiimellow"
+      ],
+      "profiles": [
+        {
+          "login": "sukiimellow",
+          "name": "SukiiMellow",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/7cb7f936-d594-4d0a-881f-20d6633b37f1-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Engagement Guru",
+      "winner": "Streamer University Police Department",
+      "handles": [
+        "walton",
+        "fanum"
+      ],
+      "profiles": [
+        {
+          "login": "walton",
+          "name": "WALTON",
+          "role": "Faculty",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/28e1a3bf-8d44-47c7-9cc2-d9c66fa5ca56-profile_image-300x300.png"
+        },
+        {
+          "login": "fanum",
+          "name": "Fanum",
+          "role": "Faculty",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/276ceeb1-3553-4874-ae99-fc0b448ca6e0-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Most Honourable",
+      "winner": "Bella Grace",
+      "handles": [
+        "ysabellagrace"
+      ],
+      "profiles": [
+        {
+          "login": "ysabellagrace",
+          "name": "ysabellagrace",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/0bb15e94-6459-42c8-ab1e-1cc489f87352-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Social Butterfly",
+      "winner": "Lani Aliza",
+      "handles": [
+        "lanializa"
+      ],
+      "profiles": [
+        {
+          "login": "lanializa",
+          "name": "lanializa",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/b4946444-8f54-44da-b700-581c67153fd5-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Best Dressed",
+      "winner": "FlippenJosh",
+      "handles": [],
+      "profiles": []
+    },
+    {
+      "title": "Best Group",
+      "winner": "CORE",
+      "handles": [],
+      "profiles": []
+    },
+    {
+      "title": "Class Clown",
+      "winner": "ILikeHaskell",
+      "handles": [
+        "ilikehaskell"
+      ],
+      "profiles": [
+        {
+          "login": "ilikehaskell",
+          "name": "ilikehaskell",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/47926a3e-8f58-48ea-8e3c-a81197906175-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Rising Star",
+      "winner": "Madi & Reem",
+      "handles": [
+        "madi2hottyy",
+        "reemknocks"
+      ],
+      "profiles": [
+        {
+          "login": "madi2hottyy",
+          "name": "Madi2hottyy",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/ffdf318c-32c0-4cdf-ac7a-8704e928c199-profile_image-300x300.png"
+        },
+        {
+          "login": "reemknocks",
+          "name": "reemknocks",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/c0bc29bf-12eb-49c9-85a0-422acb35ea3d-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Community Builder",
+      "winner": "Stable Ronaldo",
+      "handles": [
+        "stableronaldo"
+      ],
+      "profiles": [
+        {
+          "login": "stableronaldo",
+          "name": "stableronaldo",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/020d2ed3-c2f2-4d33-805f-92cf966a9c43-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Most Consistent Streamer",
+      "winner": "Juicy Jacob",
+      "handles": [
+        "juicyjacob"
+      ],
+      "profiles": [
+        {
+          "login": "juicyjacob",
+          "name": "juicyjacob",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/29129a0b-738b-41c9-b686-6f29f9ef0409-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Biggest Snitch",
+      "winner": "Big Ant",
+      "handles": [
+        "real_bigant26"
+      ],
+      "profiles": [
+        {
+          "login": "real_bigant26",
+          "name": "real_bigant26",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/edb48a8a-8fd8-4a5e-b550-53feb0e78f6a-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Hidden Gem",
+      "winner": "Blazian",
+      "handles": [
+        "blazian"
+      ],
+      "profiles": [
+        {
+          "login": "blazian",
+          "name": "Blazian",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/fc0f5791-af96-406d-b23e-beb809f1b76f-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Class Duo",
+      "winner": "E11ysa & FindJeremiah",
+      "handles": [
+        "e11ysa",
+        "findjeremiah"
+      ],
+      "profiles": [
+        {
+          "login": "e11ysa",
+          "name": "E11ysa",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/ee0b3c20-b34e-48b5-b56f-fed629807600-profile_image-300x300.png"
+        },
+        {
+          "login": "findjeremiah",
+          "name": "findjeremiah",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/0ba17f7d-d8a8-4faf-a063-fbbb8442cb63-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Heart of the Community",
+      "winner": "IJustLovePuzzles",
+      "handles": [
+        "ijustlovepuzzles"
+      ],
+      "profiles": [
+        {
+          "login": "ijustlovepuzzles",
+          "name": "ijustlovepuzzles",
+          "role": "Faculty",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/6a92ccba-8272-4241-8cf4-7dc9947ad2e9-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Steady Growth Award",
+      "winner": "Wardrobe Winter",
+      "handles": [
+        "wardrobewinter"
+      ],
+      "profiles": [
+        {
+          "login": "wardrobewinter",
+          "name": "wardrobewinter",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/661a5b96-db93-4a14-b197-83c8939cb7d1-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Worst Behaviour",
+      "winner": "Bilzo",
+      "handles": [
+        "notbilzo"
+      ],
+      "profiles": [
+        {
+          "login": "notbilzo",
+          "name": "NotBilzo",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/19fee6ae-9383-4110-afce-9c696c7a3c58-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Campus Icon",
+      "winner": "YourRAGE",
+      "handles": [
+        "yourragegaming"
+      ],
+      "featured": true,
+      "profiles": [
+        {
+          "login": "yourragegaming",
+          "name": "yourragegaming",
+          "role": "Faculty",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/70c63d12-ecae-485c-9bca-3d3f3ad5782a-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Best Roommates",
+      "winner": "Wardrobe Winter & Plaqueboymax",
+      "handles": [
+        "wardrobewinter",
+        "plaqueboymax"
+      ],
+      "profiles": [
+        {
+          "login": "wardrobewinter",
+          "name": "wardrobewinter",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/661a5b96-db93-4a14-b197-83c8939cb7d1-profile_image-300x300.png"
+        },
+        {
+          "login": "plaqueboymax",
+          "name": "PlaqueBoyMax",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/14f0fcfd-00d4-4004-9379-93e0c6336f5e-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "School Spirit",
+      "winner": "MyaNicole & TheRealMiyaLive",
+      "handles": [
+        "myanicolelive",
+        "therealmiyalive"
+      ],
+      "profiles": [
+        {
+          "login": "myanicolelive",
+          "name": "MyaNicoleLive",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/d5fe658a-a8f7-476e-be66-3f91fb3de9ed-profile_image-300x300.png"
+        },
+        {
+          "login": "therealmiyalive",
+          "name": "therealmiyalive",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/92d1f8c8-97e3-40f8-aa98-54e8b83c8d8e-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Prankster",
+      "winner": "Kanel Joseph",
+      "handles": [
+        "kaneljoseph"
+      ],
+      "profiles": [
+        {
+          "login": "kaneljoseph",
+          "name": "KanelJoseph",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/a1c500f8-8cd5-4be5-aa45-5c3f80d36242-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Best Professor",
+      "winner": "Ludwig",
+      "handles": [
+        "ludwig"
+      ],
+      "featured": true,
+      "profiles": [
+        {
+          "login": "ludwig",
+          "name": "Ludwig",
+          "role": "Faculty",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/bde8aaf5-35d4-4503-9797-842401da900f-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Best Club Director",
+      "winner": "Markell Washington",
+      "handles": [
+        "markellwashington"
+      ],
+      "profiles": [
+        {
+          "login": "markellwashington",
+          "name": "markellwashington",
+          "role": "Faculty",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/25fa2181-5526-4e4a-bb04-e10c99f6e3c9-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "Best In-Room Content",
+      "winner": "ChrisGoneCrazy & RealNiaLove",
+      "handles": [
+        "chrisgonecrazylive",
+        "therealnialovee"
+      ],
+      "profiles": [
+        {
+          "login": "chrisgonecrazylive",
+          "name": "ChrisGoneCrazyLive",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/bf434015-8ea5-46e5-b43e-83851f27f874-profile_image-300x300.png"
+        },
+        {
+          "login": "therealnialovee",
+          "name": "therealnialovee",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/b0b2465a-e5c9-4af5-be9e-0367e811936d-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "MVP",
+      "winner": "Suburb Baby",
+      "handles": [
+        "suburbbaby"
+      ],
+      "featured": true,
+      "profiles": [
+        {
+          "login": "suburbbaby",
+          "name": "Suburbbaby",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/81e048e9-2ca5-4808-adfa-6e5e7e2a989f-profile_image-300x300.png"
+        }
+      ]
+    },
+    {
+      "title": "The Valedictorian",
+      "winner": "MeesterKeem",
+      "handles": [
+        "meesterkeem"
+      ],
+      "featured": true,
+      "profiles": [
+        {
+          "login": "meesterkeem",
+          "name": "MeesterKeem",
+          "role": "Student",
+          "avatar": "https://static-cdn.jtvnw.net/jtv_user_pictures/fdf871a0-1afe-48b5-ae4d-ded50fcc8822-profile_image-300x300.png"
+        }
+      ]
+    }
+  ]
+}

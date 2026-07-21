@@ -1,4 +1,4 @@
-import { MultiviewApp } from "../page";
+import { MultiviewApp } from "../campus-experience";
 
 export default async function MultiviewPage({
   searchParams

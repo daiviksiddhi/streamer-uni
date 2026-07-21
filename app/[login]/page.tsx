@@ -1,4 +1,4 @@
-import { StreamerApp } from "../page";
+import { StreamerApp } from "../campus-experience";
 
 export default async function ChannelPage({
   params
