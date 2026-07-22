@@ -1990,10 +1990,6 @@ function MobileDirectory({
   );
 }
 
-export default function Home() {
-  return <StreamerApp />;
-}
-
 type MultiviewLayout = "Focus" | "Grid" | "Wide";
 const maxMultiviewChannels = 8;
 

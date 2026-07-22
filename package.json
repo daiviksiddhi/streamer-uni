@@ -1,7 +1,18 @@
 {
-  "name": "streamer-university-concept",
-  "version": "0.1.0",
+  "name": "streamer-university-watch",
+  "version": "1.0.0",
   "private": true,
+  "description": "A campus-wide live discovery, multiview, and event archive experience for Streamer University 2026.",
+  "author": "Daivik Siddhi",
+  "license": "MIT",
+  "homepage": "https://streameruniversity.watch",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daiviksiddhi/streamer-uni.git"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,10 +22,9 @@
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
-    "framer-motion": "^12.0.0",
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest"
+    "next": "^16.2.11",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
@@ -22,9 +32,15 @@
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.17.0",
-    "eslint-config-next": "latest",
+    "eslint-config-next": "^16.2.11",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "8.5.21",
+      "sharp": "0.35.3"
+    }
   }
 }
