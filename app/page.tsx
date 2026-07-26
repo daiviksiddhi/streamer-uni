@@ -22,8 +22,14 @@ export default function ConcludedPage() {
         </p>
         <div className="mt-6 flex items-center justify-center gap-2.5 max-sm:flex-col max-sm:items-stretch">
           <Link
-            href="/wrapped"
+            href="/yearbook"
             className="su-primary inline-flex min-h-10 items-center justify-center rounded-[4px] px-4 text-[14px] font-bold text-white no-underline"
+          >
+            Open the yearbook
+          </Link>
+          <Link
+            href="/wrapped"
+            className="inline-flex min-h-10 items-center justify-center rounded-[4px] bg-[#2f2f35] px-4 text-[14px] font-bold text-white no-underline hover:bg-[#3b3b44]"
           >
             See 2026 Wrapped
           </Link>

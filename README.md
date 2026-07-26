@@ -46,6 +46,9 @@ The product found a real audience during the event:
 - **Streamer University Wrapped:** Preserve the event with viewing totals,
   growth leaderboards, top clips, the full class roll, and closing-ceremony
   awards.
+- **Class of 2026 Yearbook:** Open an asset-based hardcover treatment built
+  from the supplied Cosmos book references, forming the foundation for the
+  complete portrait yearbook.
 - **Responsive experience:** Desktop prioritizes directory, video, and chat;
   mobile uses horizontal discovery shelves and a compact stream-first layout.
 
@@ -216,6 +219,7 @@ does not require that provider snapshot.
 | `/[login]` | Individual creator viewing page |
 | `/multiview` | Lecture Hall multiview |
 | `/wrapped` | Streamer University Wrapped 2026 |
+| `/yearbook` | Interactive Class of 2026 yearbook |
 
 ## Privacy and Analytics
 
