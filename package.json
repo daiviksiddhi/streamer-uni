@@ -18,8 +18,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "wrapped:generate": "node scripts/generate-wrapped.mjs",
-    "yearbook:cover": "node scripts/build-yearbook-cover.mjs"
+    "wrapped:generate": "node scripts/generate-wrapped.mjs"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

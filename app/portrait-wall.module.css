@@ -1,0 +1,85 @@
+.wall {
+  /* Sized so four rows land inside a typical viewport. */
+  --tile: clamp(108px, 11vw, 162px);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  overflow: hidden;
+}
+
+/* Each track holds its row twice, so sliding it exactly half its width
+   lands on an identical frame and the loop is seamless. */
+.track {
+  display: flex;
+  width: max-content;
+  animation: drift linear infinite;
+  will-change: transform;
+}
+
+.reverse {
+  animation-direction: reverse;
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.tile {
+  flex: none;
+  position: relative;
+  width: var(--tile);
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  filter: grayscale(1);
+  opacity: 0.62;
+  /* The wall itself ignores the pointer; individual faces answer to it. */
+  pointer-events: auto;
+  transition: filter 0.45s ease, opacity 0.45s ease, transform 0.45s ease;
+}
+
+.tile:hover {
+  filter: grayscale(0);
+  opacity: 1;
+  transform: scale(1.06);
+  z-index: 2;
+}
+
+/* Hold the wall still for anyone who asks for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+  }
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(14, 14, 16, 0.36);
+}
+
+/* Darkest under the copy, lighter toward the edges so the faces stay present */
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    54% 44% at 50% 46%,
+    rgba(14, 14, 16, 0.86) 0%,
+    rgba(14, 14, 16, 0.54) 46%,
+    rgba(14, 14, 16, 0.12) 78%,
+    rgba(14, 14, 16, 0.66) 100%
+  );
+}

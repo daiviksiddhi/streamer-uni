@@ -25,3 +25,6 @@ pnpm-debug.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Full-res Instagram pulls (re-downloadable via gallery-dl)
+portraits-originals/
