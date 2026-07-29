@@ -1299,9 +1299,6 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
           <img src="/su-crest-2026-transparent.png" alt="" className="h-8 w-8 object-contain" />
         </button>
         <button onClick={browseHome} className="hidden h-full px-4 text-[15px] font-semibold text-white hover:text-gold sm:block">
-          Following
-        </button>
-        <button onClick={browseHome} className="hidden h-full px-4 text-[15px] font-semibold text-white hover:text-gold sm:block">
           Browse
         </button>
         <Link href="/wrapped" className="hidden h-full items-center px-4 text-[13px] font-bold uppercase text-gold hover:text-gold-soft md:flex">
@@ -1310,7 +1307,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         <button className="hidden h-8 w-8 items-center justify-center rounded-[4px] hover:bg-[#2f2f35] md:flex" aria-label="More">
           <KebabIcon />
         </button>
-        <div className="relative mx-auto w-[62vw] max-w-[300px] md:w-full md:max-w-[540px]">
+        <div className="relative mx-auto w-[62vw] max-w-[300px] md:w-full md:max-w-[500px]">
           <label className="flex h-9 w-full overflow-hidden rounded-[6px] border border-[#67676b] bg-[#18181b] focus-within:border-burgundy focus-within:bg-[#0e0e10]">
             <input
               value={query}
@@ -1398,7 +1395,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
         </button>
         <Link
           href="/multiview"
-          className="su-primary hidden h-8 shrink-0 items-center gap-2 rounded-[4px] px-3.5 text-[13px] font-bold text-white lg:ml-1 lg:flex"
+          className="su-primary hidden h-8 shrink-0 items-center gap-2 whitespace-nowrap rounded-[4px] px-3.5 text-[13px] font-bold text-white lg:ml-1 lg:flex"
         >
           <MultiviewIcon className="h-4 w-4" />
           Enter a Lecture Hall
@@ -1407,7 +1404,7 @@ export function StreamerApp({ initialWatchLogin }: { initialWatchLogin?: string 
           href="https://shop.streameruniversity.com"
           target="_blank"
           rel="noreferrer"
-          className="mx-1 hidden h-8 items-center gap-2 rounded-[999px] bg-[#2f2f35] px-4 text-[13px] font-bold hover:bg-[#3b3b44] md:flex"
+          className="mx-1 hidden h-8 shrink-0 items-center gap-2 whitespace-nowrap rounded-[999px] bg-[#2f2f35] px-4 text-[13px] font-bold hover:bg-[#3b3b44] md:flex"
         >
           Buy Merch
         </a>
@@ -2316,7 +2313,7 @@ export function MultiviewApp({ initialLogins = [] }: { initialLogins?: string[] 
           href="https://shop.streameruniversity.com"
           target="_blank"
           rel="noreferrer"
-          className="hidden h-8 items-center rounded-[999px] bg-[#2f2f35] px-4 text-[13px] font-bold hover:bg-[#3b3b44] md:flex"
+          className="hidden h-8 shrink-0 items-center whitespace-nowrap rounded-[999px] bg-[#2f2f35] px-4 text-[13px] font-bold hover:bg-[#3b3b44] md:flex"
         >
           Buy Merch
         </a>
